@@ -1,8 +1,6 @@
 ﻿using System.Linq.Expressions;
-using FluentAssertions;
-using FluentAssertions.Common;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json.Linq;
+using Shouldly;
 using Xunit;
 using Xunit.Sdk;
 
@@ -79,7 +77,8 @@ public class MediatorTests
             "A-after",
             "B-after"
         ], logs);
-        Assert.Equal(1, handler.InvocationCount);
+
+        handler.InvocationCount.ShouldBe(1);
     }
 
     [Fact]
@@ -139,7 +138,7 @@ public class ExpressionTests()
 
         var taskResult = compiled.DynamicInvoke(new LoggingQueryHandler(), new LoggingQuery(2), CancellationToken.None);
         var result = await (Task<int>)taskResult;
-        result.Should().Be(4);
+        result.ShouldBe(4);
     }
 
     [Fact]
@@ -149,7 +148,7 @@ public class ExpressionTests()
 
         var taskResult = compiled.DynamicInvoke(new LoggingQueryHandler(), new LoggingQuery(2), CancellationToken.None);
         var result = await (Task<int>)taskResult;
-        result.Should().Be(4);
+        result.ShouldBe(4);
     }
 
     private Delegate BuildCompiled<THandler, TRequest>()
