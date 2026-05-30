@@ -23,7 +23,7 @@ public class Mediator(IServiceProvider provider)
 
             var cacheEntry = _cache.GetOrAdd((requestType, responseType), _ =>
             {
-                var handlerMap = GetHanderMap(requestType, responseType);
+                var handlerMap = GetHandlerMap(requestType, responseType);
                 var behaviourMap = GetBehaviourMap(requestType, responseType);
 
                 return new MediatorCacheEntry(
@@ -66,7 +66,7 @@ public class Mediator(IServiceProvider provider)
 
             var cacheEntry = _cache.GetOrAdd((requestType, null), _ =>
             {
-                var handlerMap = GetHanderMap(requestType);
+                var handlerMap = GetHandlerMap(requestType);
                 var behaviourMap = GetBehaviourMap(requestType);
 
                 return new MediatorCacheEntry(
@@ -100,7 +100,7 @@ public class Mediator(IServiceProvider provider)
         }
     }
 
-    private static MediatorMap GetHanderMap(Type requestType, Type responseType)
+    private static MediatorMap GetHandlerMap(Type requestType, Type responseType)
     {
         var handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, responseType);
         var handlerParam = Expression.Parameter(handlerType, "handler");
@@ -115,7 +115,7 @@ public class Mediator(IServiceProvider provider)
         return new MediatorMap(handlerType, handlerDelegate);
     }
 
-    private static MediatorMap GetHanderMap(Type requestType)
+    private static MediatorMap GetHandlerMap(Type requestType)
     {
         var handlerType = typeof(IRequestHandler<>).MakeGenericType(requestType);
         var handlerParam = Expression.Parameter(handlerType, "handler");
