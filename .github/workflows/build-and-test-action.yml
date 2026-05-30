@@ -45,6 +45,7 @@ jobs:
         with:
           report-path: './artifacts/*.ctrf'
           pull-request-report: true
+          overwrite-comment: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
