@@ -22,7 +22,7 @@ jobs:
         id: extract_branch
 
       - name: Run cake step
-        uses: cake-build/cake-action@v3
+        uses: cake-build/cake-action@763b621ef69b317c1d6bde43a65f189c936b503b
         with:
           script-path: build.cake
           target: NugetPackAndPush

@@ -28,7 +28,7 @@ jobs:
         id: extract_branch
 
       - name: Run cake step
-        uses: cake-build/cake-action@v3
+        uses: cake-build/cake-action@763b621ef69b317c1d6bde43a65f189c936b503b
         with:
           script-path: build.cake
           target: BuildAndSonarScan
@@ -40,7 +40,7 @@ jobs:
           SonarBranch: main # NOTE: Free sonar so we're using "main" and a build scan project.
 
       - name: Publish Test Report with Pull Request Comment
-        uses: ctrf-io/github-test-reporter@v1
+        uses: ctrf-io/github-test-reporter@0f299074936c32ccaab5be5230511f6b2b9080aa
         if: ${{ !cancelled() }}       # run this step even if previous step failed
         with:
           report-path: './artifacts/*.ctrf'
