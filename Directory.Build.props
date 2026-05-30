@@ -2,7 +2,6 @@
   <PropertyGroup>
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
     <UseVSTest>false</UseVSTest>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
