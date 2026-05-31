@@ -354,6 +354,15 @@ Task("BuildAndSonarScan")
 	.IsDependentOn("__Benchmark")
 	.IsDependentOn("__SonarScan");
 
+Task("LocalNugetPackAndPush")
+	.IsDependentOn("__NugetArgsCheck")
+	.IsDependentOn("__VersionInfo")
+	.IsDependentOn("__LintCheck")
+	.IsDependentOn("__Test")
+	.IsDependentOn("__Benchmark")
+	.IsDependentOn("__NugetPack")
+	.IsDependentOn("__NugetPush");
+
 Task("NugetPackAndPush")
 	.IsDependentOn("__NugetArgsCheck")
 	.IsDependentOn("__SonarArgsCheck")
