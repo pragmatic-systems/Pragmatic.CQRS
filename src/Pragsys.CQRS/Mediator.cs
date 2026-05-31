@@ -61,8 +61,15 @@ public class Mediator(IServiceProvider provider)
         }
         catch (TargetInvocationException ex)
         {
+            var inner = ex.InnerException;
+            if (inner is OperationCanceledException oce)
+            {
+                throw oce;  // preserve exact cancellation semantics
+            }
+
             // Unpack the reflection error here.
-            ExceptionDispatchInfo.Capture(ex.InnerException ?? ex).Throw();
+            ExceptionDispatchInfo.Capture(inner ?? ex).Throw();
+            throw;
         }
     }
 
@@ -113,7 +120,15 @@ public class Mediator(IServiceProvider provider)
         catch (TargetInvocationException ex)
         {
             // Unpack the reflection error here.
-            ExceptionDispatchInfo.Capture(ex.InnerException ?? ex).Throw();
+            var inner = ex.InnerException;
+            if (inner is OperationCanceledException oce)
+            {
+                throw oce;  // preserve exact cancellation semantics
+            }
+
+            // Unpack the reflection error here.
+            ExceptionDispatchInfo.Capture(inner ?? ex).Throw();
+            throw;
         }
     }
 
