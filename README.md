@@ -17,6 +17,20 @@ A Simple CQRS implementation that mimics the MediatR interfaces.
 ## Pending
 * May look at adding notification/broadcast fan out.
 
+## Usage
+
+Auto registers IMediator instance and all handlers in associated assemblies as Transient.
+
+```
+  services.AddCqrs(cfg =>
+  {
+      cfg.RegisterServicesFromAssemblies(
+          new[] { typeof(Program).Assembly });
+  });
+```
+
+`IPipelineBehaviour` to be registered seperately, applies in reverse order - LIFO pattern.
+
 ## Building Locally
 You can use the cake file to build, test and publish:
 
