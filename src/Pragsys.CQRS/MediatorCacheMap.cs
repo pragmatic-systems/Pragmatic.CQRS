@@ -74,7 +74,7 @@ public class MediatorCacheMap
         var behaviourType = typeof(IPipelineBehavior<,>).MakeGenericType(requestType, responseType);
         var nextType = typeof(Func<>).MakeGenericType(typeof(Task<>).MakeGenericType(responseType));
 
-        var handlerParam = Expression.Parameter(behaviourType, "handler");
+        var behaviourParam = Expression.Parameter(behaviourType, "handler");
         var requestParam = Expression.Parameter(requestType, "input");
         var nextParam = Expression.Parameter(nextType, "next");
         var ctParam = Expression.Parameter(typeof(CancellationToken), "ct");
@@ -82,10 +82,10 @@ public class MediatorCacheMap
         var handleMethod = behaviourType.GetMethod("Handle", new Type[] { requestType, nextType, typeof(CancellationToken) })
             ?? throw new CqrsException($"Cannot resolve Handle method for Behaviour: {behaviourType.FullName}", behaviourType);
 
-        MethodCallExpression expr = Expression.Call(handlerParam, handleMethod, requestParam, nextParam, ctParam);
-        var handlerDelegate = Expression.Lambda(expr, handlerParam, requestParam, nextParam, ctParam).Compile();
+        MethodCallExpression expr = Expression.Call(behaviourParam, handleMethod, requestParam, nextParam, ctParam);
+        var behaviourDelegate = Expression.Lambda(expr, behaviourParam, requestParam, nextParam, ctParam).Compile();
 
-        return new MediatorMap(behaviourType, handlerDelegate);
+        return new MediatorMap(behaviourType, behaviourDelegate);
     }
 
     private static MediatorMap GetBehaviourMap(Type requestType)
@@ -93,7 +93,7 @@ public class MediatorCacheMap
         var behaviourType = typeof(IPipelineBehavior<>).MakeGenericType(requestType);
         var nextType = typeof(Func<>).MakeGenericType(typeof(Task));
 
-        var handlerParam = Expression.Parameter(behaviourType, "handler");
+        var behaviourParam = Expression.Parameter(behaviourType, "handler");
         var requestParam = Expression.Parameter(requestType, "input");
         var nextParam = Expression.Parameter(nextType, "next");
         var ctParam = Expression.Parameter(typeof(CancellationToken), "ct");
@@ -101,9 +101,9 @@ public class MediatorCacheMap
         var handleMethod = behaviourType.GetMethod("Handle", new Type[] { requestType, nextType, typeof(CancellationToken) })
             ?? throw new CqrsException($"Cannot resolve Handle method for Behaviour: {behaviourType.FullName}", behaviourType);
 
-        MethodCallExpression expr = Expression.Call(handlerParam, handleMethod, requestParam, nextParam, ctParam);
-        var handlerDelegate = Expression.Lambda(expr, handlerParam, requestParam, nextParam, ctParam).Compile();
+        MethodCallExpression expr = Expression.Call(behaviourParam, handleMethod, requestParam, nextParam, ctParam);
+        var behaviourDelegate = Expression.Lambda(expr, behaviourParam, requestParam, nextParam, ctParam).Compile();
 
-        return new MediatorMap(behaviourType, handlerDelegate);
+        return new MediatorMap(behaviourType, behaviourDelegate);
     }
 }
