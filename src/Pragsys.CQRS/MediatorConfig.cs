@@ -3,22 +3,19 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Pragsys.CQRS;
 
-public class MediatorConfig(IServiceCollection Services)
+public class MediatorConfig
 {
-    public void RegisterServicesFromAssemblies(params Assembly[] targetAssemblies)
+    private readonly IServiceCollection _services;
+
+    internal MediatorConfig(IServiceCollection services)
     {
-        RegisterServicesFromAssemblies(targetAssemblies, ServiceLifetime.Transient);
+        ArgumentNullException.ThrowIfNull(services);
+        _services = services;
     }
 
-    public void RegisterServicesFromAssemblies(ServiceLifetime serviceLifetime, params Assembly[] targetAssemblies)
+    public void RegisterServicesFromAssemblies(Assembly[] targetAssemblies, ServiceLifetime serviceLifetime)
     {
-        RegisterServicesFromAssemblies(targetAssemblies, serviceLifetime);
-    }
-
-    public void RegisterServicesFromAssemblies(Assembly[] targetAssemblies, ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
-    {
-        if (Services == null) throw new ArgumentNullException(nameof(Services));
-        if (targetAssemblies == null) throw new ArgumentNullException(nameof(targetAssemblies));
+        ArgumentNullException.ThrowIfNull(targetAssemblies);
 
         var handlerWithResultInterface = typeof(IRequestHandler<,>);
         var handlerWithoutResultInterface = typeof(IRequestHandler<>);
@@ -48,16 +45,24 @@ public class MediatorConfig(IServiceCollection Services)
                         var requestType = iface.GetGenericArguments()[0];
                         var resultType = iface.GetGenericArguments()[1];
                         var genericType = typeof(IRequestHandler<,>).MakeGenericType(requestType, resultType);
-                        Services.Add(new ServiceDescriptor(genericType, type, serviceLifetime));
+                        _services.Add(new ServiceDescriptor(genericType, type, serviceLifetime));
                     }
                     else if (genericDef == handlerWithoutResultInterface)
                     {
                         var requestType = iface.GetGenericArguments()[0];
                         var genericType = typeof(IRequestHandler<>).MakeGenericType(requestType);
-                        Services.Add(new ServiceDescriptor(genericType, type, serviceLifetime));
+                        _services.Add(new ServiceDescriptor(genericType, type, serviceLifetime));
                     }
                 }
             }
         }
+    }
+}
+
+public static class MediatorConfigExtensions
+{
+    public static void RegisterServicesFromAssemblies(this MediatorConfig config, params Assembly[] targetAssemblies)
+    {
+        config.RegisterServicesFromAssemblies(targetAssemblies, ServiceLifetime.Transient);
     }
 }
