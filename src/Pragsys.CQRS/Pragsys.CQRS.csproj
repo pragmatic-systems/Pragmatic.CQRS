@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -11,8 +11,8 @@
     <PackageId>Pragsys.CQRS</PackageId>
     <Authors>Tristan Rhodes</Authors>
     <Company>Pragmatic Systems</Company>
-    <Description>A lightweight CQRS mediator implementation mimicking MediatR interfaces. Provides request/response handlers, void (fire-and-forget) handlers, and a pipeline behavior middleware system backed by expression-tree delegate caching for performance.</Description>
-    <PackageTags>cqrs;mediator;mediatr;request;response;pipeline;middleware;dependency-injection</PackageTags>
+    <Description>A lightweight CQRS mediator implementation mimicking MediatR interfaces. Provides request/response handlers, void (fire-and-forget) handlers, and a pipeline behavior middleware system.</Description>
+    <PackageTags>cqrs;mediator</PackageTags>
 
     <!-- Package Links -->
     <PackageProjectUrl>https://github.com/pragmatic-systems/Pragsys.CQRS</PackageProjectUrl>
