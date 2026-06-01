@@ -11,8 +11,7 @@ public class LoggingQueryHandler : IRequestHandler<LoggingQuery, int>
 
     public Task<int> Handle(LoggingQuery query, CancellationToken cancellationToken = default)
     {
-        if (cancellationToken.IsCancellationRequested)
-            throw new OperationCanceledException();
+        cancellationToken.ThrowIfCancellationRequested();
 
         InvocationCount++;
         return Task.FromResult(query.Value * 2);
@@ -31,7 +30,7 @@ public class LoggingBehavior : IPipelineBehavior<LoggingQuery, int>
         Log = logs ?? new List<string>();
     }
 
-    public async Task<int> Handle(LoggingQuery input, Func<Task<int>> next, CancellationToken cancellationToken = default)
+    public async Task<int> Handle(LoggingQuery input, RequestHandlerDelegate<int> next, CancellationToken cancellationToken = default)
     {
         Log.Add($"{Name}-before");
         var result = await next();
@@ -48,8 +47,7 @@ public class VoidLoggingCommandHandler : IRequestHandler<VoidLoggingCommand>
 
     public Task Handle(VoidLoggingCommand query, CancellationToken cancellationToken = default)
     {
-        if (cancellationToken.IsCancellationRequested)
-            throw new OperationCanceledException();
+        cancellationToken.ThrowIfCancellationRequested();
 
         InvocationCount++;
         return Task.CompletedTask;
@@ -68,7 +66,7 @@ public class VoidLoggingBehavior : IPipelineBehavior<VoidLoggingCommand>
 
     public List<string> Log { get; }
 
-    public async Task Handle(VoidLoggingCommand input, Func<Task> next, CancellationToken cancellationToken = default)
+    public async Task Handle(VoidLoggingCommand input, RequestHandlerDelegate next, CancellationToken cancellationToken = default)
     {
         Log.Add($"{Name}-before");
         await next();
