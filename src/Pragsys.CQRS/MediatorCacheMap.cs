@@ -40,15 +40,27 @@ public class MediatorCacheMap
     private static MediatorMap GetHandlerMap(Type requestType, Type responseType)
     {
         var handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, responseType);
-        var handlerParam = Expression.Parameter(handlerType, "handler");
-        var requestParam = Expression.Parameter(requestType, "request");
-        var ctParam = Expression.Parameter(typeof(CancellationToken), "ct");
+        var handlerParamObj = Expression.Parameter(typeof(object), "handlerObj");
+        var requestParamObj = Expression.Parameter(typeof(object), "requestObj");
+        var ctParamObj = Expression.Parameter(typeof(object), "ctObj");
 
         var handleMethod = handlerType.GetMethod("Handle", new[] { requestType, typeof(CancellationToken) })
             ?? throw new CqrsException($"Cannot resolve Handle method for Handler: {handlerType.FullName}", handlerType);
 
-        MethodCallExpression expr = Expression.Call(handlerParam, handleMethod, requestParam, ctParam);
-        var handlerDelegate = Expression.Lambda(expr, handlerParam, requestParam, ctParam).Compile();
+        var handlerExpr = Expression.Convert(handlerParamObj, handlerType);
+        var requestExpr = Expression.Convert(requestParamObj, requestType);
+        var ctExpr = Expression.Convert(ctParamObj, typeof(CancellationToken));
+
+        var callExpr = Expression.Call(handlerExpr, handleMethod, requestExpr, ctExpr);
+
+        var lambdaExpr = Expression.Lambda<Func<object, object, object, object>>(
+            callExpr,
+            handlerParamObj,
+            requestParamObj,
+            ctParamObj
+        );
+
+        var handlerDelegate = lambdaExpr.Compile();
 
         return new MediatorMap(handlerType, handlerDelegate);
     }
@@ -56,15 +68,27 @@ public class MediatorCacheMap
     private static MediatorMap GetHandlerMap(Type requestType)
     {
         var handlerType = typeof(IRequestHandler<>).MakeGenericType(requestType);
-        var handlerParam = Expression.Parameter(handlerType, "handler");
-        var requestParam = Expression.Parameter(requestType, "request");
-        var ctParam = Expression.Parameter(typeof(CancellationToken), "ct");
+        var handlerParamObj = Expression.Parameter(typeof(object), "handlerObj");
+        var requestParamObj = Expression.Parameter(typeof(object), "requestObj");
+        var ctParamObj = Expression.Parameter(typeof(object), "ctObj");
 
         var handleMethod = handlerType.GetMethod("Handle", new[] { requestType, typeof(CancellationToken) })
             ?? throw new CqrsException($"Cannot resolve Handle method for Handler: {handlerType.FullName}", handlerType);
 
-        MethodCallExpression expr = Expression.Call(handlerParam, handleMethod, requestParam, ctParam);
-        var handlerDelegate = Expression.Lambda(expr, handlerParam, requestParam, ctParam).Compile();
+        var handlerExpr = Expression.Convert(handlerParamObj, handlerType);
+        var requestExpr = Expression.Convert(requestParamObj, requestType);
+        var ctExpr = Expression.Convert(ctParamObj, typeof(CancellationToken));
+
+        MethodCallExpression callExpr = Expression.Call(handlerExpr, handleMethod, requestExpr, ctExpr);
+
+        var lambdaExpr = Expression.Lambda<Func<object, object, object, object>>(
+            callExpr,
+            handlerParamObj,
+            requestParamObj,
+            ctParamObj
+        );
+
+        var handlerDelegate = lambdaExpr.Compile();
 
         return new MediatorMap(handlerType, handlerDelegate);
     }
@@ -74,18 +98,32 @@ public class MediatorCacheMap
         var behaviourType = typeof(IPipelineBehavior<,>).MakeGenericType(requestType, responseType);
         var nextType = typeof(RequestHandlerDelegate<>).MakeGenericType(responseType);
 
-        var behaviourParam = Expression.Parameter(behaviourType, "handler");
-        var requestParam = Expression.Parameter(requestType, "input");
-        var nextParam = Expression.Parameter(nextType, "next");
-        var ctParam = Expression.Parameter(typeof(CancellationToken), "ct");
+        var behaviourParamObj = Expression.Parameter(typeof(object), "behaviourObj");
+        var inputParamObj = Expression.Parameter(typeof(object), "inputObj");
+        var requestNextObj = Expression.Parameter(typeof(object), "nextObj");
+        var ctParamObj = Expression.Parameter(typeof(object), "ctObj");
 
-        var handleMethod = behaviourType.GetMethod("Handle", new Type[] { requestType, nextType, typeof(CancellationToken) })
+        var behaviourMethod = behaviourType.GetMethod("Handle", new Type[] { requestType, nextType, typeof(CancellationToken) })
             ?? throw new CqrsException($"Cannot resolve Handle method for Behaviour: {behaviourType.FullName}", behaviourType);
 
-        MethodCallExpression expr = Expression.Call(behaviourParam, handleMethod, requestParam, nextParam, ctParam);
-        var behaviourDelegate = Expression.Lambda(expr, behaviourParam, requestParam, nextParam, ctParam).Compile();
+        var behaviourExpr = Expression.Convert(behaviourParamObj, behaviourType);
+        var requestExpr = Expression.Convert(inputParamObj, requestType);
+        var nextExpr = Expression.Convert(requestNextObj, nextType);
+        var ctExpr = Expression.Convert(ctParamObj, typeof(CancellationToken));
 
-        return new MediatorMap(behaviourType, behaviourDelegate);
+        MethodCallExpression callExpr = Expression.Call(behaviourExpr, behaviourMethod, requestExpr, nextExpr, ctExpr);
+
+        var lambdaExpr = Expression.Lambda<Func<object, object, object, object, object>>(
+            callExpr,
+            behaviourParamObj,
+            inputParamObj,
+            requestNextObj,
+            ctParamObj
+        );
+
+        var handlerDelegate = lambdaExpr.Compile();
+
+        return new MediatorMap(behaviourType, handlerDelegate);
     }
 
     private static MediatorMap GetBehaviourMap(Type requestType)
@@ -93,17 +131,31 @@ public class MediatorCacheMap
         var behaviourType = typeof(IPipelineBehavior<>).MakeGenericType(requestType);
         var nextType = typeof(RequestHandlerDelegate);
 
-        var behaviourParam = Expression.Parameter(behaviourType, "handler");
-        var requestParam = Expression.Parameter(requestType, "input");
-        var nextParam = Expression.Parameter(nextType, "next");
-        var ctParam = Expression.Parameter(typeof(CancellationToken), "ct");
+        var behaviourParamObj = Expression.Parameter(typeof(object), "behaviourObj");
+        var inputParamObj = Expression.Parameter(typeof(object), "inputObj");
+        var requestNextObj = Expression.Parameter(typeof(object), "nextObj");
+        var ctParamObj = Expression.Parameter(typeof(object), "ctObj");
 
-        var handleMethod = behaviourType.GetMethod("Handle", new Type[] { requestType, nextType, typeof(CancellationToken) })
+        var behaviourMethod = behaviourType.GetMethod("Handle", new Type[] { requestType, nextType, typeof(CancellationToken) })
             ?? throw new CqrsException($"Cannot resolve Handle method for Behaviour: {behaviourType.FullName}", behaviourType);
 
-        MethodCallExpression expr = Expression.Call(behaviourParam, handleMethod, requestParam, nextParam, ctParam);
-        var behaviourDelegate = Expression.Lambda(expr, behaviourParam, requestParam, nextParam, ctParam).Compile();
+        var behaviourExpr = Expression.Convert(behaviourParamObj, behaviourType);
+        var requestExpr = Expression.Convert(inputParamObj, requestType);
+        var nextExpr = Expression.Convert(requestNextObj, nextType);
+        var ctExpr = Expression.Convert(ctParamObj, typeof(CancellationToken));
 
-        return new MediatorMap(behaviourType, behaviourDelegate);
+        MethodCallExpression callExpr = Expression.Call(behaviourExpr, behaviourMethod, requestExpr, nextExpr, ctExpr);
+
+        var lambdaExpr = Expression.Lambda<Func<object, object, object, object, object>>(
+            callExpr,
+            behaviourParamObj,
+            inputParamObj,
+            requestNextObj,
+            ctParamObj
+        );
+
+        var handlerDelegate = lambdaExpr.Compile();
+
+        return new MediatorMap(behaviourType, handlerDelegate);
     }
 }
