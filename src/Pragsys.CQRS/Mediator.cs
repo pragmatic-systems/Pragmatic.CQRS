@@ -74,6 +74,7 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap)
 
             var cacheEntry = cacheMap.GetOrAdd(requestType);
 
+            // Transient lifespan here - can't cache and re-use.
             var handler = provider.GetRequiredService(cacheEntry.Handler.Type);
             var behaviors = provider.GetServices(cacheEntry.Behaviour.Type).Reverse();
 
