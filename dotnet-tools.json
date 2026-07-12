@@ -9,8 +9,15 @@
       ],
       "rollForward": false
     },
+    "GitVersion.Tool": {
+      "version": "5.12.0",
+      "commands": [
+        "dotnet-gitversion"
+      ],
+      "rollForward": false
+    },
     "dotnet-sonarscanner": {
-      "version": "11.2.1",
+      "version": "7.1.1",
       "commands": [
         "dotnet-sonarscanner"
       ],
