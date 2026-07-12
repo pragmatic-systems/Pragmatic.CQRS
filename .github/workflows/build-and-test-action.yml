@@ -33,6 +33,10 @@ jobs:
         run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
         id: extract_branch
 
+      - name: Install dotnet tools
+        shell: bash
+        run: dotnet tool restore
+
       - name: Run cake step
         uses: cake-build/cake-action@763b621ef69b317c1d6bde43a65f189c936b503b
         with:
