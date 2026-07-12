@@ -1,7 +1,7 @@
 ﻿using Shouldly;
 using Xunit;
 
-namespace Pragsys.CQRS.Tests;
+namespace Pragmatic.CQRS.Tests;
 
 public class CqrsExceptionTests
 {

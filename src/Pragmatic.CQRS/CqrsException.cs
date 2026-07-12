@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace Pragsys.CQRS;
+namespace Pragmatic.CQRS;
 
 /// <summary>
 /// Base exception for CQRS mediator errors.

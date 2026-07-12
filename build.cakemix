@@ -1,10 +1,10 @@
 {
   "NugetPackages": [
-    "./src/Pragsys.CQRS/Pragsys.CQRS.csproj"
+    "./src/Pragmatic.CQRS/Pragmatic.CQRS.csproj"
   ],
   "DockerPackages": [],
   "Benchmarks": [
-    "./tests/Pragsys.CQRS.Benchmark/Pragsys.CQRS.Benchmark.csproj"
+    "./tests/Pragmatic.CQRS.Benchmark/Pragmatic.CQRS.Benchmark.csproj"
   ],
   "ApiSpecs": null
 }

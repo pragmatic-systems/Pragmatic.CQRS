@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Pragsys.CQRS;
+namespace Pragmatic.CQRS;
 
 public class MediatorConfig
 {

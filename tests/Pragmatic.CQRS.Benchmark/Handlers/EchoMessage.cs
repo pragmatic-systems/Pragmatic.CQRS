@@ -1,4 +1,4 @@
-﻿namespace Pragsys.CQRS.Benchmark.Handlers;
+﻿namespace Pragmatic.CQRS.Benchmark.Handlers;
 
 public class EchoMessage : IRequest<int>
 {

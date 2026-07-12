@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Pragsys.CQRS\Pragsys.CQRS.csproj" />
+    <ProjectReference Include="..\..\src\Pragmatic.CQRS\Pragmatic.CQRS.csproj" />
   </ItemGroup>
 
 </Project>

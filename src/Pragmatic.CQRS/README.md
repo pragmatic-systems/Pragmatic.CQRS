@@ -1,4 +1,4 @@
-﻿## Pragsys.CQRS
+﻿## Pragmatic.CQRS
 A super lightweight CQRS implementation that replicates the MediatR interfaces.
 
 ## Features

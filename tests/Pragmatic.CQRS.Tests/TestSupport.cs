@@ -1,4 +1,4 @@
-﻿namespace Pragsys.CQRS.Tests;
+﻿namespace Pragmatic.CQRS.Tests;
 
 public record UnknownQuery : IRequest<string>;
 
