@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq.Expressions;
 
-namespace Pragsys.CQRS;
+namespace Pragmatic.CQRS;
 
 public class MediatorCacheMap
 {

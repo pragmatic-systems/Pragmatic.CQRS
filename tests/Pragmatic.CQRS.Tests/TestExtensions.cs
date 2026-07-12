@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Sdk;
 
-namespace Pragsys.CQRS.Tests;
+namespace Pragmatic.CQRS.Tests;
 
 public static class TestExtensions
 {

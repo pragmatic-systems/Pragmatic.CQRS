@@ -1,6 +1,6 @@
-﻿using Pragsys.CQRS;
+﻿using Pragmatic.CQRS;
 
-namespace Pragsys.CQRS.Benchmark.Handlers;
+namespace Pragmatic.CQRS.Benchmark.Handlers;
 
 public class VoidMessage : IRequest
 {

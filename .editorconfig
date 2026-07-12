@@ -1,4 +1,4 @@
-# EditorConfig for Pragsys.CQRS
+# EditorConfig for Pragmatic.CQRS
 root = true
 
 [*.cs]

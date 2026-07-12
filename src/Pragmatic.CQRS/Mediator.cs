@@ -2,7 +2,7 @@
 using System.Runtime.ExceptionServices;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Pragsys.CQRS;
+namespace Pragmatic.CQRS;
 
 public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap)
     : IMediator

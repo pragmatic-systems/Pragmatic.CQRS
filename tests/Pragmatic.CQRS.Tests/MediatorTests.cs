@@ -3,7 +3,7 @@ using Shouldly;
 using Xunit;
 using Xunit.Sdk;
 
-namespace Pragsys.CQRS.Tests;
+namespace Pragmatic.CQRS.Tests;
 
 public class MediatorTests
 {

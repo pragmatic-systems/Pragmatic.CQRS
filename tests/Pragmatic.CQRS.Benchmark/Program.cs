@@ -1,6 +1,6 @@
 ﻿using BenchmarkDotNet.Running;
 
-namespace Pragsys.CQRS.Benchmark;
+namespace Pragmatic.CQRS.Benchmark;
 
 public static class Program
 {

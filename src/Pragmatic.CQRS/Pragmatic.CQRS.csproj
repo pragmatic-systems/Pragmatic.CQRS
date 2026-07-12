@@ -5,18 +5,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
-    <RootNamespace>Pragsys.CQRS</RootNamespace>
+    <RootNamespace>Pragmatic.CQRS</RootNamespace>
 
     <!-- Package Identity -->
-    <PackageId>Pragsys.CQRS</PackageId>
+    <PackageId>Pragmatic.CQRS</PackageId>
     <Authors>Tristan Rhodes</Authors>
     <Company>Pragmatic Systems</Company>
     <Description>A lightweight CQRS mediator implementation mimicking MediatR interfaces. Provides request/response handlers, void (fire-and-forget) handlers, and a pipeline behavior middleware system.</Description>
     <PackageTags>cqrs;mediator</PackageTags>
 
     <!-- Package Links -->
-    <PackageProjectUrl>https://github.com/pragmatic-systems/Pragsys.CQRS</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/pragmatic-systems/Pragsys.CQRS.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/pragmatic-systems/Pragmatic.CQRS</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/pragmatic-systems/Pragmatic.CQRS.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
 
     <!-- Package Content -->

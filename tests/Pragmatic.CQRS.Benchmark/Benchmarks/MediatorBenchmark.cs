@@ -1,8 +1,8 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Microsoft.Extensions.DependencyInjection;
-using Pragsys.CQRS.Benchmark.Handlers;
+using Pragmatic.CQRS.Benchmark.Handlers;
 
-namespace Pragsys.CQRS.Benchmark.Benchmarks;
+namespace Pragmatic.CQRS.Benchmark.Benchmarks;
 
 public class MediatorBenchmark
 {

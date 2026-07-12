@@ -1,4 +1,4 @@
-﻿namespace Pragsys.CQRS;
+﻿namespace Pragmatic.CQRS;
 
 public interface IMediator
 {
