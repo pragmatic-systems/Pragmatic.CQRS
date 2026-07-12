@@ -1,0 +1,56 @@
+name: "[Public] Pack and Push Solution"
+run-name: "[Public] Pack and Push Solution"
+
+# Disable husky install on restore
+env:
+  HUSKY: '0'
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+  packages: write
+
+jobs:
+  Pack-And-Push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # This is nescessary so it does not conflict with git-version
+      
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+
+      - name: Install dotnet tools
+        shell: bash
+        run: dotnet tool restore
+
+      - name: Run cake step
+        uses: cake-build/cake-action@763b621ef69b317c1d6bde43a65f189c936b503b
+        with:
+          script-path: build.cake
+          target: FullPackAndPush
+          NugetSource: ${{ vars.PUBLIC_NUGET_SOURCE }}
+          NugetApiKey: ${{ secrets.PUBLIC_NUGET_APIKEY }}
+          ContainerRegistry: ${{ vars.PRIVATE_CONTAINER_REGISTRY }}
+          ContainerRegistryToken: ${{ secrets.GITHUB_TOKEN }}
+          ContainerRegistryUserName: ${{ vars.PRIVATE_CONTAINER_REGISTRY_USERNAME }}
+          SonarOrg: ${{ vars.SONARORG }}
+          SonarToken: ${{ secrets.SONARTOKEN }}
+          SonarHostUrl: ${{ vars.SONARHOST }}
+          SonarProjectKey: ${{ secrets.SONAR_PROJ_KEY }}
+          SonarProjectName: ${{ vars.SONAR_PROJ_NAME }}
+          SonarBranch: ${{ steps.extract_branch.outputs.branch }}
+
+      - name: Publish Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: Artifacts
+          path: ./artifacts/
