@@ -40,7 +40,7 @@ jobs:
       - name: Inject credentials for package feed
         shell: bash
         run: |
-          dotnet nuget add source "https://nuget.pkg.github.com/pragmatic-systems/index.json" --name "pragmatic-systems" --username "USERNAME" --password "${{ secrets.GITHUB_TOKEN }}"
+          dotnet nuget update source "https://nuget.pkg.github.com/pragmatic-systems/index.json" --name "pragmatic-systems" --username "USERNAME" --password "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Run cake step
         uses: cake-build/cake-action@763b621ef69b317c1d6bde43a65f189c936b503b
