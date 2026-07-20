@@ -12,11 +12,11 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        var requestType = request.GetType();
+        var responseType = typeof(TResponse);
+
         try
         {
-            var requestType = request.GetType();
-            var responseType = typeof(TResponse);
-
             var cacheEntry = cacheMap.GetOrAdd(requestType, responseType);
 
             // Transient lifespan here - can't cache and re-use.
@@ -58,6 +58,10 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
                 throw oce;  // preserve exact cancellation semantics
             }
 
+#pragma warning disable S6667
+            logger?.LogError(inner ?? ex, "Exception processing request '{RequestType}<{ResponseType}>'", requestType.FullName, responseType.FullName);
+#pragma warning restore S6667
+
             // Unpack the reflection error here. (Throw to pass sonar scan)
             ExceptionDispatchInfo.Capture(inner ?? ex).Throw();
             throw;
@@ -69,10 +73,10 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        var requestType = request.GetType();
+
         try
         {
-            var requestType = request.GetType();
-
             var cacheEntry = cacheMap.GetOrAdd(requestType);
 
             // Transient lifespan here - can't cache and re-use.
@@ -114,6 +118,10 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
             {
                 throw oce;  // preserve exact cancellation semantics
             }
+
+#pragma warning disable S6667
+            logger?.LogError(inner ?? ex, "Exception processing request '{RequestType}'", requestType.FullName);
+#pragma warning restore S6667
 
             // Unpack the reflection error here. (Throw to pass sonar scan)
             ExceptionDispatchInfo.Capture(inner ?? ex).Throw();
