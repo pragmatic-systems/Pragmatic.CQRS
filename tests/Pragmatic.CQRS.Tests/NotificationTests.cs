@@ -26,6 +26,54 @@ public class NotificationTests
     }
 
     [Fact]
+    public async Task Publish_AllHandlers_ExecuteOnIndividualAsyncError()
+    {
+        var provider = BuildNotificationContainer(services =>
+        {
+            services.AddSingleton<INotificationHandler<DomainEventOccurred>, AsyncFirstErrorHandler>();
+            services.AddSingleton<INotificationHandler<DomainEventOccurred>, AsyncSecondErrorHandler>();
+        });
+
+        var mediator = provider.GetRequiredService<IMediator>();
+
+        await mediator.Publish(new DomainEventOccurred("TestEvent"), TestContext.Current.CancellationToken);
+
+        var handlers = provider.GetServices<INotificationHandler<DomainEventOccurred>>();
+        var first = (DomainEventFirstHandler)handlers.First();
+        var second = (DomainEventSecondHandler)handlers.Last();
+
+        first.InvocationCount.ShouldBe(1);
+        first.ReceivedEventName.ShouldBe("TestEvent");
+
+        second.InvocationCount.ShouldBe(1);
+        second.ReceivedEventName.ShouldBe("TestEvent");
+    }
+
+    [Fact]
+    public async Task Publish_AllHandlers_ExecuteOnIndividualSyncError()
+    {
+        var provider = BuildNotificationContainer(services =>
+        {
+            services.AddSingleton<INotificationHandler<DomainEventOccurred>, SyncFirstErrorHandler>();
+            services.AddSingleton<INotificationHandler<DomainEventOccurred>, SyncSecondErrorHandler>();
+        });
+
+        var mediator = provider.GetRequiredService<IMediator>();
+
+        await mediator.Publish(new DomainEventOccurred("TestEvent"), TestContext.Current.CancellationToken);
+
+        var handlers = provider.GetServices<INotificationHandler<DomainEventOccurred>>();
+        var first = (DomainEventFirstHandler)handlers.First();
+        var second = (DomainEventSecondHandler)handlers.Last();
+
+        first.InvocationCount.ShouldBe(1);
+        first.ReceivedEventName.ShouldBe("TestEvent");
+
+        second.InvocationCount.ShouldBe(1);
+        second.ReceivedEventName.ShouldBe("TestEvent");
+    }
+
+    [Fact]
     public async Task Publish_PassesCancellationToken()
     {
         using var cts = new CancellationTokenSource();
@@ -50,14 +98,18 @@ public class NotificationTests
         await mediator.Publish(new DomainEventOccurred("TestEvent"), TestContext.Current.CancellationToken);
     }
 
-    private IServiceProvider BuildNotificationContainer()
+    private IServiceProvider BuildNotificationContainer(Action<IServiceCollection> enrich = null)
     {
         var services = new ServiceCollection();
-        services.AddCqrs(cfg =>
-        {
-            cfg.RegisterServicesFromAssemblies(
-                new[] { typeof(MediatorTests).Assembly }, ServiceLifetime.Singleton);
-        });
+
+        services.AddTransient<IMediator, Mediator>();
+        services.AddSingleton<MediatorCacheMap>();
+        services.AddSingleton<INotificationHandler<DomainEventOccurred>, DomainEventFirstHandler>();
+        services.AddSingleton<INotificationHandler<DomainEventOccurred>, DomainEventSecondHandler>();
+        services.AddSingleton<INotificationHandler<CancellationNotification>, CancellationNotificationHandler>();
+
+        if (enrich != null)
+            enrich(services);
 
         return services.BuildServiceProvider();
     }

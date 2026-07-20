@@ -155,6 +155,7 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap)
                 throw oce;  // preserve exact cancellation semantics
             }
 
+            // Unpack the reflection error here. (Throw to pass sonar scan)
             ExceptionDispatchInfo.Capture(inner ?? ex).Throw();
             throw;
         }

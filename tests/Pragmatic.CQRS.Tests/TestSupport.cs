@@ -111,6 +111,40 @@ public class DomainEventSecondHandler : INotificationHandler<DomainEventOccurred
     }
 }
 
+public class AsyncFirstErrorHandler : INotificationHandler<DomainEventOccurred>
+{
+    public async Task Handle(DomainEventOccurred notification, CancellationToken cancellationToken = default)
+    {
+        await Task.Delay(100);
+        throw new ApplicationException();
+    }
+}
+
+public class AsyncSecondErrorHandler : INotificationHandler<DomainEventOccurred>
+{
+    public async Task Handle(DomainEventOccurred notification, CancellationToken cancellationToken = default)
+    {
+        await Task.Delay(100);
+        throw new ApplicationException();
+    }
+}
+
+public class SyncFirstErrorHandler : INotificationHandler<DomainEventOccurred>
+{
+    public Task Handle(DomainEventOccurred notification, CancellationToken cancellationToken = default)
+    {
+        throw new ApplicationException();
+    }
+}
+
+public class SyncSecondErrorHandler : INotificationHandler<DomainEventOccurred>
+{
+    public Task Handle(DomainEventOccurred notification, CancellationToken cancellationToken = default)
+    {
+        throw new ApplicationException();
+    }
+}
+
 public record CancellationNotification : INotification { }
 
 public class CancellationNotificationHandler : INotificationHandler<CancellationNotification>
