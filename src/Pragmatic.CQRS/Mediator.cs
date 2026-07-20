@@ -1,10 +1,11 @@
 ﻿using System.Reflection;
 using System.Runtime.ExceptionServices;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Pragmatic.CQRS;
 
-public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap)
+public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILogger<Mediator>? logger = null)
     : IMediator
 {
     public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
@@ -125,39 +126,35 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap)
     {
         ArgumentNullException.ThrowIfNull(notification);
 
-        try
+        var notificationType = notification.GetType();
+
+        var handlerMap = cacheMap.GetOrAddNotification(notificationType);
+
+        // Get all notification handlers (multiple handlers per notification supported)
+        var handlers = provider.GetServices(handlerMap.Type);
+
+        var tasks = handlers.Select(async handler =>
         {
-            var notificationType = notification.GetType();
+            if (handler == null) return;
 
-            var handlerMap = cacheMap.GetOrAddNotification(notificationType);
-
-            // Get all notification handlers (multiple handlers per notification supported)
-            var handlers = provider.GetServices(handlerMap.Type);
-
-            var tasks = handlers.Select(handler =>
+            try
             {
-                if (handler == null) return Task.CompletedTask;
-
                 var executionHandler = (Func<object, object, object, object>)handlerMap.Method;
                 var result = executionHandler(handler, notification, cancellationToken)
                     ?? throw new CqrsException($"Cannot resolve handler method for Handler: {handlerMap.Type.FullName}", handlerMap.Type);
 
-                return (Task)result;
-            }).ToArray();
-
-            await Task.WhenAll(tasks);
-        }
-        catch (TargetInvocationException ex)
-        {
-            var inner = ex.InnerException;
-            if (inner is OperationCanceledException oce)
-            {
-                throw oce;  // preserve exact cancellation semantics
+                await (Task)result;
             }
+            catch (OperationCanceledException)
+            {
+                throw;  // preserve cancellation semantics
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "Exception occurred while notifying handler '{Handler}' for notification '{Notification}'", handlerMap.Type.FullName, notificationType.FullName);
+            }
+        }).ToArray();
 
-            // Unpack the reflection error here. (Throw to pass sonar scan)
-            ExceptionDispatchInfo.Capture(inner ?? ex).Throw();
-            throw;
-        }
+        await Task.WhenAll(tasks);
     }
 }

@@ -30,8 +30,7 @@ public class NotificationTests
     {
         var provider = BuildNotificationContainer(services =>
         {
-            services.AddSingleton<INotificationHandler<DomainEventOccurred>, AsyncFirstErrorHandler>();
-            services.AddSingleton<INotificationHandler<DomainEventOccurred>, AsyncSecondErrorHandler>();
+            services.AddSingleton<INotificationHandler<DomainEventOccurred>, AsyncErrorHandler>();
         });
 
         var mediator = provider.GetRequiredService<IMediator>();
@@ -39,14 +38,16 @@ public class NotificationTests
         await mediator.Publish(new DomainEventOccurred("TestEvent"), TestContext.Current.CancellationToken);
 
         var handlers = provider.GetServices<INotificationHandler<DomainEventOccurred>>();
-        var first = (DomainEventFirstHandler)handlers.First();
-        var second = (DomainEventSecondHandler)handlers.Last();
+        var first = handlers.OfType<DomainEventFirstHandler>().First();
+        var second = handlers.OfType<DomainEventSecondHandler>().First();
 
         first.InvocationCount.ShouldBe(1);
         first.ReceivedEventName.ShouldBe("TestEvent");
 
         second.InvocationCount.ShouldBe(1);
         second.ReceivedEventName.ShouldBe("TestEvent");
+
+        // TODO: Test For Exceptions
     }
 
     [Fact]
@@ -54,8 +55,7 @@ public class NotificationTests
     {
         var provider = BuildNotificationContainer(services =>
         {
-            services.AddSingleton<INotificationHandler<DomainEventOccurred>, SyncFirstErrorHandler>();
-            services.AddSingleton<INotificationHandler<DomainEventOccurred>, SyncSecondErrorHandler>();
+            services.AddSingleton<INotificationHandler<DomainEventOccurred>, SyncErrorHandler>();
         });
 
         var mediator = provider.GetRequiredService<IMediator>();
@@ -63,14 +63,16 @@ public class NotificationTests
         await mediator.Publish(new DomainEventOccurred("TestEvent"), TestContext.Current.CancellationToken);
 
         var handlers = provider.GetServices<INotificationHandler<DomainEventOccurred>>();
-        var first = (DomainEventFirstHandler)handlers.First();
-        var second = (DomainEventSecondHandler)handlers.Last();
+        var first = handlers.OfType<DomainEventFirstHandler>().First();
+        var second = handlers.OfType<DomainEventSecondHandler>().First();
 
         first.InvocationCount.ShouldBe(1);
         first.ReceivedEventName.ShouldBe("TestEvent");
 
         second.InvocationCount.ShouldBe(1);
         second.ReceivedEventName.ShouldBe("TestEvent");
+
+        // TODO: Test For Exceptions
     }
 
     [Fact]

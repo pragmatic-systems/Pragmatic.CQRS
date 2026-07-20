@@ -4,20 +4,15 @@ namespace Pragmatic.CQRS;
 
 public static class MediatorExtensions
 {
-    public static IServiceCollection AddCqrs(this IServiceCollection services)
-    {
-        services.AddTransient<IMediator, Mediator>();
-        services.AddSingleton<MediatorCacheMap>();
-        return services;
-    }
-
-    public static IServiceCollection AddCqrs(this IServiceCollection services, Action<MediatorConfig> config)
+    public static IServiceCollection AddCqrs(this IServiceCollection services, Action<MediatorConfig>? config = null)
     {
         services.AddTransient<IMediator, Mediator>();
         services.AddSingleton<MediatorCacheMap>();
 
         var configurationBuilder = new MediatorConfig(services);
-        config(configurationBuilder);
+        if (config != null)
+            config(configurationBuilder);
+
         return services;
     }
 }
