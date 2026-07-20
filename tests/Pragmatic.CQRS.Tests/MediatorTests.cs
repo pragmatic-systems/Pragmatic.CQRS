@@ -8,6 +8,27 @@ namespace Pragmatic.CQRS.Tests;
 public class MediatorTests
 {
     [Fact]
+    public void RegisterServicesFromAssemblies_DiscoversTypedRequestHandler()
+    {
+        var services = new ServiceCollection();
+        services.AddCqrs(cfg =>
+        {
+            cfg.RegisterServicesFromAssemblies(
+                new[] { typeof(MediatorTests).Assembly });
+        });
+
+        var descriptor = services.FirstOrDefault(s =>
+            s.ServiceType == typeof(IRequestHandler<LoggingQuery, int>));
+        descriptor.ShouldNotBeNull();
+        descriptor!.ImplementationType.ShouldBe(typeof(LoggingQueryHandler));
+
+        var descriptor2 = services.FirstOrDefault(s =>
+            s.ServiceType == typeof(IRequestHandler<VoidLoggingCommand>));
+        descriptor2.ShouldNotBeNull();
+        descriptor2!.ImplementationType.ShouldBe(typeof(VoidLoggingCommandHandler));
+    }
+
+    [Fact]
     public async Task Send_WithResult_PassesCancellationToken()
     {
         using var cts = new CancellationTokenSource();
