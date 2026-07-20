@@ -69,9 +69,8 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
             logger?.LogError(inner ?? ex, "Exception processing request '{RequestType}<{ResponseType}>'", requestType.FullName, responseType.FullName);
 #pragma warning restore S6667
 
-            // Unpack the reflection error here. (Throw to pass required response check in build)
             ExceptionDispatchInfo.Capture(inner ?? ex).Throw();
-            throw;
+            throw; // throw to pass build
         }
     }
 
@@ -137,9 +136,8 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
             logger?.LogError(inner ?? ex, "Exception processing request '{RequestType}'", requestType.FullName);
 #pragma warning restore S6667
 
-            // Unpack the reflection error here. (Throw to pass required response check in build)
             ExceptionDispatchInfo.Capture(inner ?? ex).Throw();
-            throw;
+            throw; // throw to pass build
         }
     }
 
