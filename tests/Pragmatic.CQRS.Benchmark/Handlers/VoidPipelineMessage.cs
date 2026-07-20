@@ -14,7 +14,7 @@ public class VoidPipelineMessageHandler : IRequestHandler<VoidPipelineMessage>
 {
     public Task Handle(VoidPipelineMessage request, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(request.Count);
+        return Task.CompletedTask;
     }
 }
 
