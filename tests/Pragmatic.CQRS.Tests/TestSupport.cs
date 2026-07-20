@@ -138,3 +138,55 @@ public class CancellationNotificationHandler : INotificationHandler<Cancellation
         return Task.CompletedTask;
     }
 }
+
+// --- Open Generic Pipeline Behavior support types ---
+
+/// <summary>
+/// A generic pipeline behavior that can be registered as an open generic
+/// and should apply to ALL request/response types.
+/// </summary>
+public class GenericPipelineBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+{
+    private readonly List<string> _log;
+
+    public GenericPipelineBehavior(List<string> log)
+    {
+        _log = log;
+    }
+
+    public async Task<TResponse> Handle(TRequest input, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken = default)
+    {
+        _log.Add($"GenericBehavior<{typeof(TRequest).Name},{typeof(TResponse).Name}>-before");
+        var result = await next();
+        _log.Add($"GenericBehavior<{typeof(TRequest).Name},{typeof(TResponse).Name}>-after");
+        return result;
+    }
+}
+
+public record OpenGenericQueryA(int Value)
+    : IRequest<int>;
+
+public class OpenGenericQueryAHandler : IRequestHandler<OpenGenericQueryA, int>
+{
+    public int InvocationCount { get; private set; }
+
+    public Task<int> Handle(OpenGenericQueryA query, CancellationToken cancellationToken = default)
+    {
+        InvocationCount++;
+        return Task.FromResult(query.Value * 3);
+    }
+}
+
+public record OpenGenericQueryB(string Text)
+    : IRequest<string>;
+
+public class OpenGenericQueryBHandler : IRequestHandler<OpenGenericQueryB, string>
+{
+    public int InvocationCount { get; private set; }
+
+    public Task<string> Handle(OpenGenericQueryB query, CancellationToken cancellationToken = default)
+    {
+        InvocationCount++;
+        return Task.FromResult($"echo:{query.Text}");
+    }
+}
