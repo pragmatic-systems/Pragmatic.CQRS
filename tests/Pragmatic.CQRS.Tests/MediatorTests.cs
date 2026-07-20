@@ -8,6 +8,27 @@ namespace Pragmatic.CQRS.Tests;
 public class MediatorTests
 {
     [Fact]
+    public void RegisterServicesFromAssemblies_DiscoversTypedRequestHandler()
+    {
+        var services = new ServiceCollection();
+        services.AddCqrs(cfg =>
+        {
+            cfg.RegisterServicesFromAssemblies(
+                new[] { typeof(MediatorTests).Assembly });
+        });
+
+        var descriptor = services.FirstOrDefault(s =>
+            s.ServiceType == typeof(IRequestHandler<LoggingQuery, int>));
+        descriptor.ShouldNotBeNull();
+        descriptor!.ImplementationType.ShouldBe(typeof(LoggingQueryHandler));
+
+        var descriptor2 = services.FirstOrDefault(s =>
+            s.ServiceType == typeof(IRequestHandler<VoidLoggingCommand>));
+        descriptor2.ShouldNotBeNull();
+        descriptor2!.ImplementationType.ShouldBe(typeof(VoidLoggingCommandHandler));
+    }
+
+    [Fact]
     public async Task Send_WithResult_PassesCancellationToken()
     {
         using var cts = new CancellationTokenSource();
@@ -100,13 +121,59 @@ public class MediatorTests
     }
 
     [Fact]
-    public async Task Send_WithMissingHandler_ThrowsInvalidOperationException()
+    public async Task Send_WithMissingHandler_ThrowsCqrsException()
     {
         var provider = BuildContainer();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        await Assert.ThrowsAnyAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<CqrsException>(() =>
             mediator.Send(new UnknownQuery(), TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Send_OpenGenericPipelineBehavior_AppliesToMultipleRequestTypes()
+    {
+        // Register a single open-generic pipeline behavior that should wrap ALL request types.
+        var logs = new List<string>();
+
+        var services = new ServiceCollection();
+        services.AddCqrs(cfg =>
+        {
+            cfg.RegisterServicesFromAssemblies(
+                new[] { typeof(MediatorTests).Assembly }, ServiceLifetime.Singleton);
+        });
+
+        // The shared log must be registered so DI can inject it into the open-generic behavior.
+        services.AddSingleton(logs);
+
+        // Register as open generic — one registration, applies to every IRequest<IResult>.
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(GenericPipelineBehavior<,>));
+
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
+
+        // Dispatch two completely different request types.
+        var resultA = await mediator.Send(new OpenGenericQueryA(5), TestContext.Current.CancellationToken);
+        var resultB = await mediator.Send(new OpenGenericQueryB("hello"), TestContext.Current.CancellationToken);
+
+        // Verify handler results are correct.
+        Assert.Equal(15, resultA);
+        Assert.Equal("echo:hello", resultB);
+
+        // Verify the open-generic behavior wrapped BOTH requests.
+        Assert.Equal(
+            [
+                "GenericBehavior<OpenGenericQueryA,Int32>-before",
+                "GenericBehavior<OpenGenericQueryA,Int32>-after",
+                "GenericBehavior<OpenGenericQueryB,String>-before",
+                "GenericBehavior<OpenGenericQueryB,String>-after",
+            ], logs);
+
+        // Verify each handler was called exactly once.
+        var handlerA = (OpenGenericQueryAHandler)provider.GetRequiredService<IRequestHandler<OpenGenericQueryA, int>>();
+        var handlerB = (OpenGenericQueryBHandler)provider.GetRequiredService<IRequestHandler<OpenGenericQueryB, string>>();
+        handlerA.InvocationCount.ShouldBe(1);
+        handlerB.InvocationCount.ShouldBe(1);
     }
 
     private IServiceProvider BuildContainer(params IPipelineBehavior[] pipelines)
