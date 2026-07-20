@@ -121,12 +121,12 @@ public class MediatorTests
     }
 
     [Fact]
-    public async Task Send_WithMissingHandler_ThrowsInvalidOperationException()
+    public async Task Send_WithMissingHandler_ThrowsCqrsException()
     {
         var provider = BuildContainer();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        await Assert.ThrowsAnyAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<CqrsException>(() =>
             mediator.Send(new UnknownQuery(), TestContext.Current.CancellationToken));
     }
 

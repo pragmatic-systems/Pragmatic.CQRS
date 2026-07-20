@@ -20,7 +20,10 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
             var cacheEntry = cacheMap.GetOrAdd(requestType, responseType);
 
             // Transient lifespan here - can't cache and re-use.
-            var handler = provider.GetRequiredService(cacheEntry.Handler.Type);
+            var handler = provider.GetService(cacheEntry.Handler.Type)
+                ?? throw new CqrsException(
+                    $"No handler registered implementing IRequestHandler<{requestType.Name}, {responseType.Name}>.",
+                    cacheEntry.Handler.Type);
             var behaviors = provider.GetServices(cacheEntry.Behaviour.Type).Reverse();
 
             RequestHandlerDelegate<TResponse> handlerDelegate = () =>
@@ -80,7 +83,10 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
             var cacheEntry = cacheMap.GetOrAdd(requestType);
 
             // Transient lifespan here - can't cache and re-use.
-            var handler = provider.GetRequiredService(cacheEntry.Handler.Type);
+            var handler = provider.GetService(cacheEntry.Handler.Type)
+                ?? throw new CqrsException(
+                    $"No handler registered implementing IRequestHandler<{requestType.Name}>.",
+                    cacheEntry.Handler.Type);
             var behaviors = provider.GetServices(cacheEntry.Behaviour.Type).Reverse();
 
             RequestHandlerDelegate handlerDelegate = () =>
@@ -139,7 +145,12 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
         var handlerMap = cacheMap.GetOrAddNotification(notificationType);
 
         // Get all notification handlers (multiple handlers per notification supported)
-        var handlers = provider.GetServices(handlerMap.Type);
+        var handlers = provider.GetServices(handlerMap.Type).ToArray();
+
+        if (handlers.Length == 0)
+        {
+            logger?.LogDebug("No handlers registered for notification type '{NotificationType}'. Notification will be silently dropped.", notificationType.FullName);
+        }
 
         var tasks = handlers.Select(async handler =>
         {

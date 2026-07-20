@@ -46,8 +46,6 @@ public class NotificationTests
 
         second.InvocationCount.ShouldBe(1);
         second.ReceivedEventName.ShouldBe("TestEvent");
-
-        // TODO: Test For Exceptions
     }
 
     [Fact]
@@ -71,8 +69,6 @@ public class NotificationTests
 
         second.InvocationCount.ShouldBe(1);
         second.ReceivedEventName.ShouldBe("TestEvent");
-
-        // TODO: Test For Exceptions
     }
 
     [Fact]
