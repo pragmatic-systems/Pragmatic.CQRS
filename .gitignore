@@ -359,6 +359,11 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
+# Local artifact folders
+/tools/
+/artifacts/
+/local-packages/
+
 # Local Settings
 /.sonarqube
 /.claude
