@@ -12,8 +12,8 @@ public class VoidMessage : IRequest
 
 public class VoidMessageHandler : IRequestHandler<VoidMessage>
 {
-    public Task Handle(VoidMessage request, CancellationToken cancellationToken = default)
+    public ValueTask Handle(VoidMessage request, CancellationToken cancellationToken = default)
     {
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 }

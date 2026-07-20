@@ -12,16 +12,16 @@ public class VoidPipelineMessage : IRequest
 
 public class VoidPipelineMessageHandler : IRequestHandler<VoidPipelineMessage>
 {
-    public Task Handle(VoidPipelineMessage request, CancellationToken cancellationToken = default)
+    public ValueTask Handle(VoidPipelineMessage request, CancellationToken cancellationToken = default)
     {
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 }
 
 public class VoidPipelineBehaviourHandler : IPipelineBehavior<VoidPipelineMessage>
 {
-    public Task Handle(VoidPipelineMessage input, RequestHandlerDelegate next, CancellationToken cancellationToken = default)
+    public async ValueTask Handle(VoidPipelineMessage input, RequestHandlerDelegate next, CancellationToken cancellationToken = default)
     {
-        return next();
+        await next();
     }
 }

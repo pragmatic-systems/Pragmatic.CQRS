@@ -10,9 +10,9 @@ public class EchoMessage : IRequest<int>
 
 public class EchoMessageHandler : IRequestHandler<EchoMessage, int>
 {
-    public Task<int> Handle(EchoMessage request, CancellationToken cancellationToken = default)
+    public ValueTask<int> Handle(EchoMessage request, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(request.Count);
+        return new ValueTask<int>(request.Count);
     }
 }
 
@@ -26,16 +26,16 @@ public class EchoPipelineMessage : IRequest<int>
 
 public class EchoPipelineMessageHandler : IRequestHandler<EchoPipelineMessage, int>
 {
-    public Task<int> Handle(EchoPipelineMessage request, CancellationToken cancellationToken = default)
+    public ValueTask<int> Handle(EchoPipelineMessage request, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(request.Count);
+        return new ValueTask<int>(request.Count);
     }
 }
 
 public class EchoPipelineBehaviourHandler : IPipelineBehavior<EchoPipelineMessage, int>
 {
-    public Task<int> Handle(EchoPipelineMessage input, RequestHandlerDelegate<int> next, CancellationToken cancellationToken = default)
+    public async ValueTask<int> Handle(EchoPipelineMessage input, RequestHandlerDelegate<int> next, CancellationToken cancellationToken = default)
     {
-        return next();
+        return await next();
     }
 }
