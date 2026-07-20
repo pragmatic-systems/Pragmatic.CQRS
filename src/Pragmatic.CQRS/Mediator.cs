@@ -70,7 +70,7 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
 #pragma warning restore S6667
 
             ExceptionDispatchInfo.Capture(inner ?? ex).Throw();
-            throw; // throw to pass build
+            return default; // Not reached
         }
     }
 
@@ -137,7 +137,6 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
 #pragma warning restore S6667
 
             ExceptionDispatchInfo.Capture(inner ?? ex).Throw();
-            throw; // throw to pass build
         }
     }
 
