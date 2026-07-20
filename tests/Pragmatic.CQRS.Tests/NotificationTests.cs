@@ -80,8 +80,7 @@ public class NotificationTests
         var provider = BuildNotificationContainer();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            mediator.Publish(new CancellationNotification(), cts.Token));
+        await mediator.Publish(new CancellationNotification(), cts.Token).ShouldThrowAsync<OperationCanceledException>();
     }
 
     [Fact]
