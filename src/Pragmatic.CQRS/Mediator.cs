@@ -20,11 +20,15 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
             var cacheEntry = cacheMap.GetOrAdd(requestType, responseType);
 
             // Transient lifespan here - can't cache and re-use.
-            var handler = provider.GetService(cacheEntry.Handler.Type)
-                ?? throw new CqrsException(
+            var handler = provider.GetService(cacheEntry.Handler.Type);
+            var behaviors = provider.GetServices(cacheEntry.Behaviour.Type).Reverse();
+
+            if (handler == null)
+            {
+                throw new CqrsException(
                     $"No handler registered implementing IRequestHandler<{requestType.Name}, {responseType.Name}>.",
                     cacheEntry.Handler.Type);
-            var behaviors = provider.GetServices(cacheEntry.Behaviour.Type).Reverse();
+            }
 
             RequestHandlerDelegate<TResponse> handlerDelegate = () =>
             {
@@ -65,7 +69,7 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
             logger?.LogError(inner ?? ex, "Exception processing request '{RequestType}<{ResponseType}>'", requestType.FullName, responseType.FullName);
 #pragma warning restore S6667
 
-            // Unpack the reflection error here. (Throw to pass sonar scan)
+            // Unpack the reflection error here. (Throw to pass required response check in build)
             ExceptionDispatchInfo.Capture(inner ?? ex).Throw();
             throw;
         }
@@ -83,11 +87,15 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
             var cacheEntry = cacheMap.GetOrAdd(requestType);
 
             // Transient lifespan here - can't cache and re-use.
-            var handler = provider.GetService(cacheEntry.Handler.Type)
-                ?? throw new CqrsException(
+            var handler = provider.GetService(cacheEntry.Handler.Type);
+            var behaviors = provider.GetServices(cacheEntry.Behaviour.Type).Reverse();
+
+            if (handler == null)
+            {
+                throw new CqrsException(
                     $"No handler registered implementing IRequestHandler<{requestType.Name}>.",
                     cacheEntry.Handler.Type);
-            var behaviors = provider.GetServices(cacheEntry.Behaviour.Type).Reverse();
+            }
 
             RequestHandlerDelegate handlerDelegate = () =>
             {
@@ -129,7 +137,7 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
             logger?.LogError(inner ?? ex, "Exception processing request '{RequestType}'", requestType.FullName);
 #pragma warning restore S6667
 
-            // Unpack the reflection error here. (Throw to pass sonar scan)
+            // Unpack the reflection error here. (Throw to pass required response check in build)
             ExceptionDispatchInfo.Capture(inner ?? ex).Throw();
             throw;
         }
