@@ -10,6 +10,7 @@ public class MediatorCacheMap
     public sealed record MediatorCacheEntry(MediatorMap Handler, MediatorMap Behaviour);
 
     private readonly ConcurrentDictionary<(Type, Type?), MediatorCacheEntry> _cache = new();
+    private readonly ConcurrentDictionary<Type, MediatorMap> _notificationCache = new();
 
     public MediatorCacheEntry GetOrAdd(Type requestType, Type responseType)
     {
@@ -34,6 +35,14 @@ public class MediatorCacheMap
             return new MediatorCacheEntry(
                 handlerMap,
                 behaviourMap);
+        });
+    }
+
+    public MediatorMap GetOrAddNotification(Type notificationType)
+    {
+        return _notificationCache.GetOrAdd(notificationType, _ =>
+        {
+            return GetNotificationHandlerMap(notificationType);
         });
     }
 
@@ -153,5 +162,32 @@ public class MediatorCacheMap
         var handlerDelegate = lambdaExpr.Compile();
 
         return new MediatorMap(behaviourType, handlerDelegate);
+    }
+
+    private static MediatorMap GetNotificationHandlerMap(Type notificationType)
+    {
+        var handlerType = typeof(INotificationHandler<>).MakeGenericType(notificationType);
+        var handlerParamObj = Expression.Parameter(typeof(object), "handlerObj");
+        var requestParamObj = Expression.Parameter(typeof(object), "notificationObj");
+        var ctParamObj = Expression.Parameter(typeof(object), "ctObj");
+
+        var handleMethod = handlerType.GetMethod("Handle", new[] { notificationType, typeof(CancellationToken) })
+            ?? throw new CqrsException($"Cannot resolve Handle method for Handler: {handlerType.FullName}", handlerType);
+
+        var handlerExpr = Expression.Convert(handlerParamObj, handlerType);
+        var requestExpr = Expression.Convert(requestParamObj, notificationType);
+        var ctExpr = Expression.Convert(ctParamObj, typeof(CancellationToken));
+
+        var callExpr = Expression.Call(handlerExpr, handleMethod, requestExpr, ctExpr);
+
+        var lambdaExpr = Expression.Lambda<Func<object, object, object, object>>(
+            callExpr,
+            handlerParamObj,
+            requestParamObj,
+            ctParamObj);
+
+        var handlerDelegate = lambdaExpr.Compile();
+
+        return new MediatorMap(handlerType, handlerDelegate);
     }
 }

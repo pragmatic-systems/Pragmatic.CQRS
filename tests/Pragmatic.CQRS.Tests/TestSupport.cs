@@ -73,3 +73,51 @@ public class VoidLoggingBehavior : IPipelineBehavior<VoidLoggingCommand>
         Log.Add($"{Name}-after");
     }
 }
+
+// --- Notification support types ---
+public record DomainEventOccurred : INotification
+{
+    public string EventName { get; }
+
+    public DomainEventOccurred(string eventName) => EventName = eventName;
+}
+
+public class DomainEventFirstHandler : INotificationHandler<DomainEventOccurred>
+{
+    public int InvocationCount { get; private set; }
+
+    public string? ReceivedEventName { get; private set; }
+
+    public Task Handle(DomainEventOccurred notification, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        InvocationCount++;
+        ReceivedEventName = notification.EventName;
+        return Task.CompletedTask;
+    }
+}
+
+public class DomainEventSecondHandler : INotificationHandler<DomainEventOccurred>
+{
+    public int InvocationCount { get; private set; }
+
+    public string? ReceivedEventName { get; private set; }
+
+    public Task Handle(DomainEventOccurred notification, CancellationToken cancellationToken = default)
+    {
+        InvocationCount++;
+        ReceivedEventName = notification.EventName;
+        return Task.CompletedTask;
+    }
+}
+
+public record CancellationNotification : INotification { }
+
+public class CancellationNotificationHandler : INotificationHandler<CancellationNotification>
+{
+    public Task Handle(CancellationNotification notification, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.CompletedTask;
+    }
+}

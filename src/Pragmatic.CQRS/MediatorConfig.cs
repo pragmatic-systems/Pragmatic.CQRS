@@ -19,6 +19,7 @@ public class MediatorConfig
 
         var handlerWithResultInterface = typeof(IRequestHandler<,>);
         var handlerWithoutResultInterface = typeof(IRequestHandler<>);
+        var notificationHandlerInterface = typeof(INotificationHandler<>);
 
         foreach (var assembly in targetAssemblies)
         {
@@ -51,6 +52,12 @@ public class MediatorConfig
                     {
                         var requestType = iface.GetGenericArguments()[0];
                         var genericType = typeof(IRequestHandler<>).MakeGenericType(requestType);
+                        _services.Add(new ServiceDescriptor(genericType, type, serviceLifetime));
+                    }
+                    else if (genericDef == notificationHandlerInterface)
+                    {
+                        var notificationType = iface.GetGenericArguments()[0];
+                        var genericType = typeof(INotificationHandler<>).MakeGenericType(notificationType);
                         _services.Add(new ServiceDescriptor(genericType, type, serviceLifetime));
                     }
                 }

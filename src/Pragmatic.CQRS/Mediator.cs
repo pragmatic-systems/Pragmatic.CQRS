@@ -119,4 +119,44 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap)
             throw;
         }
     }
+
+    public async Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
+        where TNotification : INotification
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+
+        try
+        {
+            var notificationType = notification.GetType();
+
+            var handlerMap = cacheMap.GetOrAddNotification(notificationType);
+
+            // Get all notification handlers (multiple handlers per notification supported)
+            var handlers = provider.GetServices(handlerMap.Type);
+
+            var tasks = handlers.Select(handler =>
+            {
+                if (handler == null) return Task.CompletedTask;
+
+                var executionHandler = (Func<object, object, object, object>)handlerMap.Method;
+                var result = executionHandler(handler, notification, cancellationToken)
+                    ?? throw new CqrsException($"Cannot resolve handler method for Handler: {handlerMap.Type.FullName}", handlerMap.Type);
+
+                return (Task)result;
+            }).ToArray();
+
+            await Task.WhenAll(tasks);
+        }
+        catch (TargetInvocationException ex)
+        {
+            var inner = ex.InnerException;
+            if (inner is OperationCanceledException oce)
+            {
+                throw oce;  // preserve exact cancellation semantics
+            }
+
+            ExceptionDispatchInfo.Capture(inner ?? ex).Throw();
+            throw;
+        }
+    }
 }
