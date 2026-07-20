@@ -23,30 +23,30 @@ public class MediatorBenchmark
     }
 
     [Benchmark]
-    public void RequestResponseRawBenchmark()
+    public async Task RequestResponseRawBenchmark()
     {
         var mediator = _provider.GetRequiredService<IMediator>();
-        mediator.Send(new EchoMessage(1));
+        await mediator.Send(new EchoMessage(1));
     }
 
     [Benchmark]
-    public void RequestResponsePipelineBenchmark()
+    public async Task RequestResponsePipelineBenchmark()
     {
         var mediator = _provider.GetRequiredService<IMediator>();
-        mediator.Send(new EchoPipelineMessage(1));
+        await mediator.Send(new EchoPipelineMessage(1));
     }
 
     [Benchmark]
-    public void RequestVoidRawBenchmark()
+    public async Task RequestVoidRawBenchmark()
     {
         var mediator = _provider.GetRequiredService<IMediator>();
-        mediator.Send(new VoidMessage(1));
+        await mediator.Send(new VoidMessage(1));
     }
 
     [Benchmark]
-    public void RequestVoidPipelineBenchmark()
+    public async Task RequestVoidPipelineBenchmark()
     {
         var mediator = _provider.GetRequiredService<IMediator>();
-        mediator.Send(new VoidPipelineMessage(1));
+        await mediator.Send(new VoidPipelineMessage(1));
     }
 }
