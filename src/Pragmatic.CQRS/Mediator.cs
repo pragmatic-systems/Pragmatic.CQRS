@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using System.Runtime.ExceptionServices;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Pragmatic.CQRS;
@@ -57,20 +55,14 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
 
             return await handlerDelegate();
         }
-        catch (TargetInvocationException ex)
+        catch (OperationCanceledException)
         {
-            var inner = ex.InnerException;
-            if (inner is OperationCanceledException oce)
-            {
-                throw oce;  // preserve exact cancellation semantics
-            }
-
-#pragma warning disable S6667
-            logger?.LogError(inner ?? ex, "Exception processing request '{RequestType}<{ResponseType}>'", requestType.FullName, responseType.FullName);
-#pragma warning restore S6667
-
-            ExceptionDispatchInfo.Capture(inner ?? ex).Throw();
-            return default; // Not reached
+            throw;  // preserve cancellation semantics
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Exception processing request '{RequestType}<{ResponseType}>'", requestType.FullName, responseType.FullName);
+            throw;
         }
     }
 
@@ -123,20 +115,14 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
 
             await handlerDelegate();
         }
-        catch (TargetInvocationException ex)
+        catch (OperationCanceledException)
         {
-            // Unpack the reflection error here.
-            var inner = ex.InnerException;
-            if (inner is OperationCanceledException oce)
-            {
-                throw oce;  // preserve exact cancellation semantics
-            }
-
-#pragma warning disable S6667
-            logger?.LogError(inner ?? ex, "Exception processing request '{RequestType}'", requestType.FullName);
-#pragma warning restore S6667
-
-            ExceptionDispatchInfo.Capture(inner ?? ex).Throw();
+            throw;  // preserve cancellation semantics
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Exception processing request '{RequestType}'", requestType.FullName);
+            throw;
         }
     }
 
