@@ -95,7 +95,7 @@ public class NotificationTests
         await mediator.Publish(new DomainEventOccurred("TestEvent"), TestContext.Current.CancellationToken);
     }
 
-    private IServiceProvider BuildNotificationContainer(Action<IServiceCollection> enrich = null)
+    private IServiceProvider BuildNotificationContainer(Action<IServiceCollection>? enrich = null)
     {
         var services = new ServiceCollection();
 
