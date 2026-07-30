@@ -1,6 +1,8 @@
 # Pragmatic.CQRS
 
-A lightweight CQRS mediator implementation for .NET that mirrors the MediatR interfaces. Built for simplicity, performance, and clean separation of concerns.
+A lightweight, MIT-licensed CQRS mediator for .NET with MediatR-compatible interfaces.
+
+Simple implementation of the core mediator patterns — request/response handlers, void (fire-and-forget) handlers, notification fan-out, and pipeline behaviors — with a small code footprint and minimal overhead.
 
 ## Status
 
