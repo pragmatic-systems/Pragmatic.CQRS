@@ -80,8 +80,7 @@ public class NotificationTests
         var provider = BuildNotificationContainer();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            mediator.Publish(new CancellationNotification(), cts.Token));
+        await mediator.Publish(new CancellationNotification(), cts.Token).ShouldThrowAsync<OperationCanceledException>();
     }
 
     [Fact]
@@ -96,7 +95,7 @@ public class NotificationTests
         await mediator.Publish(new DomainEventOccurred("TestEvent"), TestContext.Current.CancellationToken);
     }
 
-    private IServiceProvider BuildNotificationContainer(Action<IServiceCollection> enrich = null)
+    private IServiceProvider BuildNotificationContainer(Action<IServiceCollection>? enrich = null)
     {
         var services = new ServiceCollection();
 

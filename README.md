@@ -1,6 +1,8 @@
 # Pragmatic.CQRS
 
-A lightweight CQRS mediator implementation for .NET that mirrors the MediatR interfaces. Built for simplicity, performance, and clean separation of concerns.
+A lightweight, MIT-licensed CQRS mediator for .NET with MediatR-compatible interfaces.
+
+Simple implementation of the core mediator patterns — request/response handlers, void (fire-and-forget) handlers, notification fan-out, and pipeline behaviors — with a small code footprint and minimal overhead.
 
 ## Status
 
@@ -19,6 +21,7 @@ A lightweight CQRS mediator implementation for .NET that mirrors the MediatR int
 - **Pipeline Behaviors** — Cross-cutting middleware (logging, validation, timing) applied in reverse registration order (LIFO).
 - **Auto-Registration** — Scan assemblies and register all handlers automatically.
 - **Compiled Expression Dispatch** — Reflection is cached and compiled into delegates for performance.
+- **ValueTask Support** — All handler and behavior interfaces return `ValueTask`/`ValueTask<T>` to avoid `Task` allocation.
 - **Cancellation Support** — Full `CancellationToken` propagation through the pipeline.
 
 ## Installation

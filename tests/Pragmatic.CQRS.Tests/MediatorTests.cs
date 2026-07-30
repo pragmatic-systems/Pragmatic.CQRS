@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
-using Xunit.Sdk;
 
 namespace Pragmatic.CQRS.Tests;
 
@@ -37,8 +36,7 @@ public class MediatorTests
         var provider = BuildContainer();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            mediator.Send(new LoggingQuery(1), cts.Token));
+        await mediator.Send(new LoggingQuery(1), cts.Token).ShouldThrowAsync<OperationCanceledException>();
     }
 
     [Fact]
@@ -51,10 +49,10 @@ public class MediatorTests
         var t2 = await mediator.Send(new LoggingQuery(2), TestContext.Current.CancellationToken);
         var handler = (LoggingQueryHandler)provider.GetRequiredService<IRequestHandler<LoggingQuery, int>>();
 
-        Assert.Equal(2, t1);
-        Assert.Equal(4, t2);
+        t1.ShouldBe(2);
+        t2.ShouldBe(4);
 
-        Assert.Equal(2, handler.InvocationCount);
+        handler.InvocationCount.ShouldBe(2);
     }
 
     [Fact]
@@ -66,8 +64,7 @@ public class MediatorTests
         var provider = BuildContainer();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            mediator.Send(new VoidLoggingCommand(), cts.Token));
+        await mediator.Send(new VoidLoggingCommand(), cts.Token).ShouldThrowAsync<OperationCanceledException>();
     }
 
     [Fact]
@@ -84,13 +81,13 @@ public class MediatorTests
         var handler = (LoggingQueryHandler)provider.GetRequiredService<IRequestHandler<LoggingQuery, int>>();
 
         // Behaviors chain in reverse: B wraps A wraps handler
-        Assert.Equal(
-            [
+        logs.ShouldBe(
+        [
             "B-before",
             "A-before",
             "A-after",
             "B-after"
-        ], logs);
+        ]);
 
         handler.InvocationCount.ShouldBe(1);
     }
@@ -108,16 +105,16 @@ public class MediatorTests
         var handler = (VoidLoggingCommandHandler)provider.GetRequiredService<IRequestHandler<VoidLoggingCommand>>();
         await mediator.Send(new VoidLoggingCommand(), TestContext.Current.CancellationToken);
 
-        Assert.Equal(1, handler.InvocationCount);
+        handler.InvocationCount.ShouldBe(1);
 
         // Behaviors chain in reverse: B wraps A wraps handler
-        Assert.Equal(
-            [
+        logs.ShouldBe(
+        [
             "B-before",
             "A-before",
             "A-after",
             "B-after"
-        ], logs);
+        ]);
     }
 
     [Fact]
@@ -126,8 +123,7 @@ public class MediatorTests
         var provider = BuildContainer();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        await Assert.ThrowsAsync<CqrsException>(() =>
-            mediator.Send(new UnknownQuery(), TestContext.Current.CancellationToken));
+        await mediator.Send(new UnknownQuery(), TestContext.Current.CancellationToken).ShouldThrowAsync<CqrsException>();
     }
 
     [Fact]
@@ -157,17 +153,17 @@ public class MediatorTests
         var resultB = await mediator.Send(new OpenGenericQueryB("hello"), TestContext.Current.CancellationToken);
 
         // Verify handler results are correct.
-        Assert.Equal(15, resultA);
-        Assert.Equal("echo:hello", resultB);
+        resultA.ShouldBe(15);
+        resultB.ShouldBe("echo:hello");
 
         // Verify the open-generic behavior wrapped BOTH requests.
-        Assert.Equal(
-            [
-                "GenericBehavior<OpenGenericQueryA,Int32>-before",
-                "GenericBehavior<OpenGenericQueryA,Int32>-after",
-                "GenericBehavior<OpenGenericQueryB,String>-before",
-                "GenericBehavior<OpenGenericQueryB,String>-after",
-            ], logs);
+        logs.ShouldBe(
+        [
+            "GenericBehavior<OpenGenericQueryA,Int32>-before",
+            "GenericBehavior<OpenGenericQueryA,Int32>-after",
+            "GenericBehavior<OpenGenericQueryB,String>-before",
+            "GenericBehavior<OpenGenericQueryB,String>-after",
+        ]);
 
         // Verify each handler was called exactly once.
         var handlerA = (OpenGenericQueryAHandler)provider.GetRequiredService<IRequestHandler<OpenGenericQueryA, int>>();

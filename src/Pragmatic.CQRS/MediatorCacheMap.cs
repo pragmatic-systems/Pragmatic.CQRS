@@ -62,8 +62,15 @@ public class MediatorCacheMap
 
         var callExpr = Expression.Call(handlerExpr, handleMethod, requestExpr, ctExpr);
 
+        // Call .AsTask() to convert ValueTask<TResult> to Task<TResult> for safe boxing.
+        // No-op when the concrete handler already returns Task<TResult> (Task : ValueTask).
+        var handlerReturnType = handleMethod.ReturnType;
+        var asTaskMethod = handlerReturnType.GetMethod("AsTask")
+            ?? throw new CqrsException($"AsTask not found on {handlerReturnType.FullName}", handlerReturnType);
+        var taskExpr = Expression.Call(callExpr, asTaskMethod);
+
         var lambdaExpr = Expression.Lambda<Func<object, object, object, object>>(
-            callExpr,
+            taskExpr,
             handlerParamObj,
             requestParamObj,
             ctParamObj);
@@ -87,10 +94,16 @@ public class MediatorCacheMap
         var requestExpr = Expression.Convert(requestParamObj, requestType);
         var ctExpr = Expression.Convert(ctParamObj, typeof(CancellationToken));
 
-        MethodCallExpression callExpr = Expression.Call(handlerExpr, handleMethod, requestExpr, ctExpr);
+        var callExpr = Expression.Call(handlerExpr, handleMethod, requestExpr, ctExpr);
+
+        // Call .AsTask() to convert ValueTask to Task for safe boxing.
+        var handlerReturnType = handleMethod.ReturnType;
+        var asTaskMethod = handlerReturnType.GetMethod("AsTask")
+            ?? throw new CqrsException($"AsTask not found on {handlerReturnType.FullName}", handlerReturnType);
+        var taskExpr = Expression.Call(callExpr, asTaskMethod);
 
         var lambdaExpr = Expression.Lambda<Func<object, object, object, object>>(
-            callExpr,
+            taskExpr,
             handlerParamObj,
             requestParamObj,
             ctParamObj);
@@ -118,10 +131,16 @@ public class MediatorCacheMap
         var nextExpr = Expression.Convert(requestNextObj, nextType);
         var ctExpr = Expression.Convert(ctParamObj, typeof(CancellationToken));
 
-        MethodCallExpression callExpr = Expression.Call(behaviourExpr, behaviourMethod, requestExpr, nextExpr, ctExpr);
+        var callExpr = Expression.Call(behaviourExpr, behaviourMethod, requestExpr, nextExpr, ctExpr);
+
+        // Call .AsTask() to convert ValueTask<TOutput> to Task<TOutput> for safe boxing.
+        var behaviourReturnType = behaviourMethod.ReturnType;
+        var asTaskMethod = behaviourReturnType.GetMethod("AsTask")
+            ?? throw new CqrsException($"AsTask not found on {behaviourReturnType.FullName}", behaviourReturnType);
+        var taskExpr = Expression.Call(callExpr, asTaskMethod);
 
         var lambdaExpr = Expression.Lambda<Func<object, object, object, object, object>>(
-            callExpr,
+            taskExpr,
             behaviourParamObj,
             inputParamObj,
             requestNextObj,
@@ -150,10 +169,16 @@ public class MediatorCacheMap
         var nextExpr = Expression.Convert(requestNextObj, nextType);
         var ctExpr = Expression.Convert(ctParamObj, typeof(CancellationToken));
 
-        MethodCallExpression callExpr = Expression.Call(behaviourExpr, behaviourMethod, requestExpr, nextExpr, ctExpr);
+        var callExpr = Expression.Call(behaviourExpr, behaviourMethod, requestExpr, nextExpr, ctExpr);
+
+        // Call .AsTask() to convert ValueTask to Task for safe boxing.
+        var behaviourReturnType = behaviourMethod.ReturnType;
+        var asTaskMethod = behaviourReturnType.GetMethod("AsTask")
+            ?? throw new CqrsException($"AsTask not found on {behaviourReturnType.FullName}", behaviourReturnType);
+        var taskExpr = Expression.Call(callExpr, asTaskMethod);
 
         var lambdaExpr = Expression.Lambda<Func<object, object, object, object, object>>(
-            callExpr,
+            taskExpr,
             behaviourParamObj,
             inputParamObj,
             requestNextObj,
@@ -180,8 +205,14 @@ public class MediatorCacheMap
 
         var callExpr = Expression.Call(handlerExpr, handleMethod, requestExpr, ctExpr);
 
+        // Call .AsTask() to convert ValueTask to Task for safe boxing.
+        var notificationReturnType = handleMethod.ReturnType;
+        var asTaskMethod = notificationReturnType.GetMethod("AsTask")
+            ?? throw new CqrsException($"AsTask not found on {notificationReturnType.FullName}", notificationReturnType);
+        var taskExpr = Expression.Call(callExpr, asTaskMethod);
+
         var lambdaExpr = Expression.Lambda<Func<object, object, object, object>>(
-            callExpr,
+            taskExpr,
             handlerParamObj,
             requestParamObj,
             ctParamObj);

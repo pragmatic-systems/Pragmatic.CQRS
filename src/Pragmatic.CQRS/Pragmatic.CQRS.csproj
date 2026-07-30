@@ -11,8 +11,8 @@
     <PackageId>Pragmatic.CQRS</PackageId>
     <Authors>Tristan Rhodes</Authors>
     <Company>Pragmatic Systems</Company>
-    <Description>A lightweight CQRS mediator implementation mimicking MediatR interfaces. Provides request/response handlers, void (fire-and-forget) handlers, and a pipeline behavior middleware system.</Description>
-    <PackageTags>cqrs;mediator</PackageTags>
+    <Description>A lightweight, MIT-licensed CQRS mediator for .NET with MediatR-compatible interfaces. Provides core support for request/response handlers, void (fire-and-forget) handlers, notification fan-out, and pipeline behaviors.</Description>
+    <PackageTags>cqrs;mediator;mediatr-alternative;lightweight;mit</PackageTags>
 
     <!-- Package Links -->
     <PackageProjectUrl>https://github.com/pragmatic-systems/Pragmatic.CQRS</PackageProjectUrl>
