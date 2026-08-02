@@ -19,7 +19,7 @@ public class MediatorBenchmark
             cfg.RegisterServicesFromAssemblies(typeof(MediatorBenchmark).Assembly);
         });
 
-        pragmaServices.AddTransient<Pragmatic.CQRS.IPipelineBehavior<VoidPipelineMessage>, VoidPipelineBehaviourHandler>();
+        pragmaServices.AddTransient<Pragmatic.CQRS.IPipelineBehavior<VoidPipelineMessage, Unit>, VoidPipelineBehaviourHandler>();
         pragmaServices.AddTransient<Pragmatic.CQRS.IPipelineBehavior<EchoPipelineMessage, int>, EchoPipelineBehaviourHandler>();
 
         _pragmaProvider = pragmaServices.BuildServiceProvider();

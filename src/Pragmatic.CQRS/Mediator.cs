@@ -88,13 +88,14 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
                     cacheEntry.Handler.Type);
             }
 
-            RequestHandlerDelegate handlerDelegate = () =>
+            RequestHandlerDelegate<Unit> handlerDelegate = async () =>
             {
                 var executionHandler = (Func<object, object, object, object>)cacheEntry.Handler.Method;
                 var result = executionHandler(handler, request, cancellationToken)
                     ?? throw new CqrsException($"Cannot resolve handler method for Handler: {cacheEntry.Handler.Type.FullName}", cacheEntry.Handler.Type);
 
-                return (Task)result;
+                await (Task)result;
+                return Unit.Instance;
             };
 
             foreach (var behavior in behaviors)
@@ -109,7 +110,7 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
                     var result = executionHandler(behavior, request, next, cancellationToken)
                         ?? throw new CqrsException($"Cannot resolve handler method for Behaviour: {cacheEntry.Behaviour.Type.FullName}", cacheEntry.Behaviour.Type);
 
-                    return (Task)result;
+                    return (Task<Unit>)result;
                 };
             }
 

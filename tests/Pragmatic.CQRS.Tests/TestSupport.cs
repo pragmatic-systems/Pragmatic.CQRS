@@ -54,7 +54,7 @@ public class VoidLoggingCommandHandler : IRequestHandler<VoidLoggingCommand>
     }
 }
 
-public class VoidLoggingBehavior : IPipelineBehavior<VoidLoggingCommand>
+public class VoidLoggingBehavior : IPipelineBehavior<VoidLoggingCommand, Unit>
 {
     public VoidLoggingBehavior(string name, List<string> logs)
     {
@@ -66,11 +66,12 @@ public class VoidLoggingBehavior : IPipelineBehavior<VoidLoggingCommand>
 
     public List<string> Log { get; }
 
-    public async ValueTask Handle(VoidLoggingCommand input, RequestHandlerDelegate next, CancellationToken cancellationToken = default)
+    public async ValueTask<Unit> Handle(VoidLoggingCommand input, RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken = default)
     {
         Log.Add($"{Name}-before");
-        await next();
+        var result = await next();
         Log.Add($"{Name}-after");
+        return result;
     }
 }
 

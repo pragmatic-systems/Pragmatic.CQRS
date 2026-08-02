@@ -27,15 +27,15 @@ public class VoidPipelineMessageHandler
 }
 
 public class VoidPipelineBehaviourHandler
-    : Pragmatic.CQRS.IPipelineBehavior<VoidPipelineMessage>,
-      MediatR.IPipelineBehavior<VoidPipelineMessage, Unit>
+    : Pragmatic.CQRS.IPipelineBehavior<VoidPipelineMessage, Unit>,
+      MediatR.IPipelineBehavior<VoidPipelineMessage, MediatR.Unit>
 {
-    async ValueTask Pragmatic.CQRS.IPipelineBehavior<VoidPipelineMessage>.Handle(VoidPipelineMessage input, Pragmatic.CQRS.RequestHandlerDelegate next, CancellationToken cancellationToken = default)
+    async ValueTask<Unit> Pragmatic.CQRS.IPipelineBehavior<VoidPipelineMessage, Unit>.Handle(VoidPipelineMessage input, Pragmatic.CQRS.RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken = default)
     {
-        await next();
+        return await next();
     }
 
-    async Task<Unit> MediatR.IPipelineBehavior<VoidPipelineMessage, Unit>.Handle(VoidPipelineMessage request, MediatR.RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken)
+    async Task<MediatR.Unit> MediatR.IPipelineBehavior<VoidPipelineMessage, MediatR.Unit>.Handle(VoidPipelineMessage request, MediatR.RequestHandlerDelegate<MediatR.Unit> next, CancellationToken cancellationToken)
     {
         return await next();
     }
