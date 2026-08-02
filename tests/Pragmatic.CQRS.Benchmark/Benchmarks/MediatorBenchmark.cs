@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Pragmatic.CQRS.Benchmark.Handlers;
 
@@ -6,47 +7,88 @@ namespace Pragmatic.CQRS.Benchmark.Benchmarks;
 
 public class MediatorBenchmark
 {
-    private readonly IServiceProvider _provider;
+    private readonly IServiceProvider _pragmaProvider;
+    private readonly IServiceProvider _mediatrProvider;
 
     public MediatorBenchmark()
     {
-        var services = new ServiceCollection();
-        services.AddCqrs(cfg =>
+        // Pragmatic.CQRS DI setup
+        var pragmaServices = new ServiceCollection();
+        pragmaServices.AddCqrs(cfg =>
         {
             cfg.RegisterServicesFromAssemblies(typeof(MediatorBenchmark).Assembly);
         });
 
-        services.AddTransient<IPipelineBehavior<VoidPipelineMessage>, VoidPipelineBehaviourHandler>();
-        services.AddTransient<IPipelineBehavior<EchoPipelineMessage, int>, EchoPipelineBehaviourHandler>();
+        pragmaServices.AddTransient<Pragmatic.CQRS.IPipelineBehavior<VoidPipelineMessage>, VoidPipelineBehaviourHandler>();
+        pragmaServices.AddTransient<Pragmatic.CQRS.IPipelineBehavior<EchoPipelineMessage, int>, EchoPipelineBehaviourHandler>();
 
-        _provider = services.BuildServiceProvider();
+        _pragmaProvider = pragmaServices.BuildServiceProvider();
+
+        // MediatR DI setup
+        var mediatrServices = new ServiceCollection();
+        mediatrServices.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(typeof(MediatorBenchmark).Assembly);
+        });
+
+        _mediatrProvider = mediatrServices.BuildServiceProvider();
     }
 
-    [Benchmark]
-    public async Task RequestResponseRawBenchmark()
+    // --- Pragmatic.CQRS benchmarks ---
+    [Benchmark(Baseline = true)]
+    public async Task Pragma_RequestResponseRaw()
     {
-        var mediator = _provider.GetRequiredService<IMediator>();
+        var mediator = _pragmaProvider.GetRequiredService<Pragmatic.CQRS.IMediator>();
         await mediator.Send(new EchoMessage(1));
     }
 
     [Benchmark]
-    public async Task RequestResponsePipelineBenchmark()
+    public async Task Pragma_RequestResponsePipeline()
     {
-        var mediator = _provider.GetRequiredService<IMediator>();
+        var mediator = _pragmaProvider.GetRequiredService<Pragmatic.CQRS.IMediator>();
         await mediator.Send(new EchoPipelineMessage(1));
     }
 
     [Benchmark]
-    public async Task RequestVoidRawBenchmark()
+    public async Task Pragma_RequestVoidRaw()
     {
-        var mediator = _provider.GetRequiredService<IMediator>();
+        var mediator = _pragmaProvider.GetRequiredService<Pragmatic.CQRS.IMediator>();
         await mediator.Send(new VoidMessage(1));
     }
 
     [Benchmark]
-    public async Task RequestVoidPipelineBenchmark()
+    public async Task Pragma_RequestVoidPipeline()
     {
-        var mediator = _provider.GetRequiredService<IMediator>();
+        var mediator = _pragmaProvider.GetRequiredService<Pragmatic.CQRS.IMediator>();
+        await mediator.Send(new VoidPipelineMessage(1));
+    }
+
+    // --- MediatR benchmarks ---
+    [Benchmark]
+    public async Task MediatR_RequestResponseRaw()
+    {
+        var mediator = _mediatrProvider.GetRequiredService<ISender>();
+        await mediator.Send(new EchoMessage(1));
+    }
+
+    [Benchmark]
+    public async Task MediatR_RequestResponsePipeline()
+    {
+        var mediator = _mediatrProvider.GetRequiredService<ISender>();
+        await mediator.Send(new EchoPipelineMessage(1));
+    }
+
+    [Benchmark]
+    public async Task MediatR_RequestVoidRaw()
+    {
+        var mediator = _mediatrProvider.GetRequiredService<ISender>();
+        await mediator.Send(new VoidMessage(1));
+    }
+
+    [Benchmark]
+    public async Task MediatR_RequestVoidPipeline()
+    {
+        var mediator = _mediatrProvider.GetRequiredService<ISender>();
         await mediator.Send(new VoidPipelineMessage(1));
     }
 }
