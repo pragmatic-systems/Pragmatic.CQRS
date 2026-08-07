@@ -14,9 +14,9 @@ public class VoidMessageHandler
     : Pragmatic.CQRS.IRequestHandler<VoidMessage>,
       MediatR.IRequestHandler<VoidMessage>
 {
-    ValueTask Pragmatic.CQRS.IRequestHandler<VoidMessage>.Handle(VoidMessage request, CancellationToken cancellationToken = default)
+    Task Pragmatic.CQRS.IRequestHandler<VoidMessage>.Handle(VoidMessage request, CancellationToken cancellationToken = default)
     {
-        return ValueTask.CompletedTask;
+        return Task.CompletedTask;
     }
 
     Task MediatR.IRequestHandler<VoidMessage>.Handle(VoidMessage request, CancellationToken cancellationToken)

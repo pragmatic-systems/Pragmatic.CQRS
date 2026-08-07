@@ -14,9 +14,9 @@ public class EchoMessageHandler
     : Pragmatic.CQRS.IRequestHandler<EchoMessage, int>,
       MediatR.IRequestHandler<EchoMessage, int>
 {
-    ValueTask<int> Pragmatic.CQRS.IRequestHandler<EchoMessage, int>.Handle(EchoMessage request, CancellationToken cancellationToken = default)
+    Task<int> Pragmatic.CQRS.IRequestHandler<EchoMessage, int>.Handle(EchoMessage request, CancellationToken cancellationToken = default)
     {
-        return new ValueTask<int>(request.Count);
+        return Task.FromResult(request.Count);
     }
 
     Task<int> MediatR.IRequestHandler<EchoMessage, int>.Handle(EchoMessage request, CancellationToken cancellationToken)
@@ -37,9 +37,9 @@ public class EchoPipelineMessageHandler
     : Pragmatic.CQRS.IRequestHandler<EchoPipelineMessage, int>,
       MediatR.IRequestHandler<EchoPipelineMessage, int>
 {
-    ValueTask<int> Pragmatic.CQRS.IRequestHandler<EchoPipelineMessage, int>.Handle(EchoPipelineMessage request, CancellationToken cancellationToken = default)
+    Task<int> Pragmatic.CQRS.IRequestHandler<EchoPipelineMessage, int>.Handle(EchoPipelineMessage request, CancellationToken cancellationToken = default)
     {
-        return new ValueTask<int>(request.Count);
+        return Task.FromResult(request.Count);
     }
 
     Task<int> MediatR.IRequestHandler<EchoPipelineMessage, int>.Handle(EchoPipelineMessage request, CancellationToken cancellationToken)
@@ -52,7 +52,7 @@ public class EchoPipelineBehaviourHandler
     : Pragmatic.CQRS.IPipelineBehavior<EchoPipelineMessage, int>,
       MediatR.IPipelineBehavior<EchoPipelineMessage, int>
 {
-    async ValueTask<int> Pragmatic.CQRS.IPipelineBehavior<EchoPipelineMessage, int>.Handle(EchoPipelineMessage input, Pragmatic.CQRS.RequestHandlerDelegate<int> next, CancellationToken cancellationToken = default)
+    async Task<int> Pragmatic.CQRS.IPipelineBehavior<EchoPipelineMessage, int>.Handle(EchoPipelineMessage input, Pragmatic.CQRS.RequestHandlerDelegate<int> next, CancellationToken cancellationToken = default)
     {
         return await next();
     }

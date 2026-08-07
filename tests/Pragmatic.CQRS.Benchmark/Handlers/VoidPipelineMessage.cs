@@ -15,9 +15,9 @@ public class VoidPipelineMessageHandler
     : Pragmatic.CQRS.IRequestHandler<VoidPipelineMessage>,
       MediatR.IRequestHandler<VoidPipelineMessage>
 {
-    ValueTask Pragmatic.CQRS.IRequestHandler<VoidPipelineMessage>.Handle(VoidPipelineMessage request, CancellationToken cancellationToken = default)
+    Task Pragmatic.CQRS.IRequestHandler<VoidPipelineMessage>.Handle(VoidPipelineMessage request, CancellationToken cancellationToken = default)
     {
-        return ValueTask.CompletedTask;
+        return Task.CompletedTask;
     }
 
     Task MediatR.IRequestHandler<VoidPipelineMessage>.Handle(VoidPipelineMessage request, CancellationToken cancellationToken)
@@ -30,7 +30,7 @@ public class VoidPipelineBehaviourHandler
     : Pragmatic.CQRS.IPipelineBehavior<VoidPipelineMessage, Unit>,
       MediatR.IPipelineBehavior<VoidPipelineMessage, MediatR.Unit>
 {
-    async ValueTask<Unit> Pragmatic.CQRS.IPipelineBehavior<VoidPipelineMessage, Unit>.Handle(VoidPipelineMessage input, Pragmatic.CQRS.RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken = default)
+    async Task<Unit> Pragmatic.CQRS.IPipelineBehavior<VoidPipelineMessage, Unit>.Handle(VoidPipelineMessage input, Pragmatic.CQRS.RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken = default)
     {
         return await next();
     }
