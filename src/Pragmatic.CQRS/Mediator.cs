@@ -39,46 +39,8 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
 
         try
         {
-            var cacheEntry = cacheMap.GetOrAdd(requestType);
-
-            // Transient lifespan here - can't cache and re-use.
-            var handler = provider.GetService(cacheEntry.Handler.Type);
-            var behaviors = provider.GetServices(cacheEntry.Behaviour.Type).Reverse();
-
-            if (handler == null)
-            {
-                throw new CqrsException(
-                    $"No handler registered implementing IRequestHandler<{requestType.Name}>.",
-                    cacheEntry.Handler.Type);
-            }
-
-            RequestHandlerDelegate<Unit> handlerDelegate = async () =>
-            {
-                var executionHandler = (Func<object, object, object, object>)cacheEntry.Handler.Method;
-                var result = executionHandler(handler, request, cancellationToken)
-                    ?? throw new CqrsException($"Cannot resolve handler method for Handler: {cacheEntry.Handler.Type.FullName}", cacheEntry.Handler.Type);
-
-                await (Task)result;
-                return Unit.Instance;
-            };
-
-            foreach (var behavior in behaviors)
-            {
-                if (behavior == null)
-                    continue;
-
-                var next = handlerDelegate;
-                handlerDelegate = () =>
-                {
-                    var executionHandler = (Func<object, object, object, object, object>)cacheEntry.Behaviour.Method;
-                    var result = executionHandler(behavior, request, next, cancellationToken)
-                        ?? throw new CqrsException($"Cannot resolve handler method for Behaviour: {cacheEntry.Behaviour.Type.FullName}", cacheEntry.Behaviour.Type);
-
-                    return (Task<Unit>)result;
-                };
-            }
-
-            await handlerDelegate();
+            var dispatcher = cacheMap.GetOrAddDispatcherVoid(request);
+            await dispatcher(provider, request, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -145,6 +107,11 @@ public delegate Task<TResponse> SendDispatcherDelegateV2<TResponse>(
     IRequest<TResponse> request,
     CancellationToken cancellationToken);
 
+public delegate Task SendDispatcherDelegateV2Void(
+    IServiceProvider provider,
+    IRequest request,
+    CancellationToken cancellationToken);
+
 public static class SendDispatcher<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
@@ -179,5 +146,41 @@ public static class SendDispatcher<TRequest, TResponse>
         }
 
         return await handlerDelegate();
+    }
+}
+
+public static class SendDispatcherVoid<TRequest>
+    where TRequest : IRequest
+{
+    public static async Task Send(IServiceProvider provider, TRequest request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        // Transient lifespan here - can't cache and re-use.
+        var handler = provider.GetService<IRequestHandler<TRequest>>();
+        var behaviors = provider.GetServices<IPipelineBehavior<TRequest, Unit>>().Reverse();
+
+        if (handler == null)
+        {
+            throw new CqrsException(
+                $"No handler registered implementing IRequestHandler<{typeof(TRequest).Name}>.");
+        }
+
+        RequestHandlerDelegate<Unit> handlerDelegate = async () =>
+        {
+            await handler.Handle(request, cancellationToken);
+            return Unit.Instance;
+        };
+
+        foreach (var behavior in behaviors)
+        {
+            if (behavior == null)
+                continue;
+
+            var next = handlerDelegate;
+            handlerDelegate = () => behavior.Handle(request, next, cancellationToken);
+        }
+
+        await handlerDelegate();
     }
 }

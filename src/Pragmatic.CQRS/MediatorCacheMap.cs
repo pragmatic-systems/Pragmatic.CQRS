@@ -11,7 +11,6 @@ public class MediatorCacheMap
 
     public sealed record MediatorCacheEntry(MediatorMap Handler, MediatorMap Behaviour);
 
-    private readonly ConcurrentDictionary<(Type, Type?), MediatorCacheEntry> _cache = new();
     private readonly ConcurrentDictionary<Type, MediatorMap> _notificationCache = new();
     private readonly ConcurrentDictionary<(Type, Type), Delegate> _dispatcherCache = new();
 
@@ -39,17 +38,27 @@ public class MediatorCacheMap
             SendDispatcher<TRequest, TResponse>.Send(provider, (TRequest)request, ct);
     }
 
-    public MediatorCacheEntry GetOrAdd(Type requestType)
+    public SendDispatcherDelegateV2Void GetOrAddDispatcherVoid(IRequest request)
     {
-        return _cache.GetOrAdd((requestType, null), _ =>
-        {
-            var handlerMap = GetHandlerMap(requestType);
-            var behaviourMap = GetBehaviourMap(requestType);
+        var requestType = request.GetType();
 
-            return new MediatorCacheEntry(
-                handlerMap,
-                behaviourMap);
+        return (SendDispatcherDelegateV2Void)_dispatcherCache.GetOrAdd((requestType, typeof(Unit)), _ =>
+        {
+            var genericMethod = typeof(MediatorCacheMap)
+                .GetMethod(nameof(BuildDispatcherVoid), BindingFlags.Public | BindingFlags.Instance)!;
+
+            var closedMethod = genericMethod.MakeGenericMethod(requestType);
+
+            return (Delegate)closedMethod.Invoke(this, null)!
+                ?? throw new CqrsException($"Failed to create void dispatcher for {requestType.Name}", requestType);
         });
+    }
+
+    public SendDispatcherDelegateV2Void BuildDispatcherVoid<TRequest>()
+        where TRequest : IRequest
+    {
+        return (provider, request, ct) =>
+            SendDispatcherVoid<TRequest>.Send(provider, (TRequest)request, ct);
     }
 
     public MediatorMap GetOrAddNotification(Type notificationType)
@@ -58,66 +67,6 @@ public class MediatorCacheMap
         {
             return GetNotificationHandlerMap(notificationType);
         });
-    }
-
-    private static MediatorMap GetHandlerMap(Type requestType)
-    {
-        var handlerType = typeof(IRequestHandler<>).MakeGenericType(requestType);
-        var handlerParamObj = Expression.Parameter(typeof(object), "handlerObj");
-        var requestParamObj = Expression.Parameter(typeof(object), "requestObj");
-        var ctParamObj = Expression.Parameter(typeof(object), "ctObj");
-
-        var handleMethod = handlerType.GetMethod("Handle", new[] { requestType, typeof(CancellationToken) })
-            ?? throw new CqrsException($"Cannot resolve Handle method for Handler: {handlerType.FullName}", handlerType);
-
-        var handlerExpr = Expression.Convert(handlerParamObj, handlerType);
-        var requestExpr = Expression.Convert(requestParamObj, requestType);
-        var ctExpr = Expression.Convert(ctParamObj, typeof(CancellationToken));
-
-        var callExpr = Expression.Call(handlerExpr, handleMethod, requestExpr, ctExpr);
-
-        var lambdaExpr = Expression.Lambda<Func<object, object, object, object>>(
-            callExpr,
-            handlerParamObj,
-            requestParamObj,
-            ctParamObj);
-
-        var handlerDelegate = lambdaExpr.Compile();
-
-        return new MediatorMap(handlerType, handlerDelegate);
-    }
-
-    private static MediatorMap GetBehaviourMap(Type requestType)
-    {
-        var responseType = typeof(Unit);
-        var behaviourType = typeof(IPipelineBehavior<,>).MakeGenericType(requestType, responseType);
-        var nextType = typeof(RequestHandlerDelegate<>).MakeGenericType(responseType);
-
-        var behaviourParamObj = Expression.Parameter(typeof(object), "behaviourObj");
-        var inputParamObj = Expression.Parameter(typeof(object), "inputObj");
-        var requestNextObj = Expression.Parameter(typeof(object), "nextObj");
-        var ctParamObj = Expression.Parameter(typeof(object), "ctObj");
-
-        var behaviourMethod = behaviourType.GetMethod("Handle", new Type[] { requestType, nextType, typeof(CancellationToken) })
-            ?? throw new CqrsException($"Cannot resolve Handle method for Behaviour: {behaviourType.FullName}", behaviourType);
-
-        var behaviourExpr = Expression.Convert(behaviourParamObj, behaviourType);
-        var requestExpr = Expression.Convert(inputParamObj, requestType);
-        var nextExpr = Expression.Convert(requestNextObj, nextType);
-        var ctExpr = Expression.Convert(ctParamObj, typeof(CancellationToken));
-
-        var callExpr = Expression.Call(behaviourExpr, behaviourMethod, requestExpr, nextExpr, ctExpr);
-
-        var lambdaExpr = Expression.Lambda<Func<object, object, object, object, object>>(
-            callExpr,
-            behaviourParamObj,
-            inputParamObj,
-            requestNextObj,
-            ctParamObj);
-
-        var handlerDelegate = lambdaExpr.Compile();
-
-        return new MediatorMap(behaviourType, handlerDelegate);
     }
 
     private static MediatorMap GetNotificationHandlerMap(Type notificationType)
