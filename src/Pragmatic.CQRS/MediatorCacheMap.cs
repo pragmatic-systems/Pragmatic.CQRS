@@ -15,37 +15,29 @@ public class MediatorCacheMap
     private readonly ConcurrentDictionary<Type, MediatorMap> _notificationCache = new();
     private readonly ConcurrentDictionary<(Type, Type), Delegate> _dispatcherCache = new();
 
-    public MediatorCacheEntry GetOrAdd(Type requestType, Type responseType)
+    public SendDispatcherDelegateV2<TResponse> GetOrAddDispatcher<TResponse>(IRequest<TResponse> request)
     {
-        return _cache.GetOrAdd((requestType, responseType), _ =>
-        {
-            var handlerMap = GetHandlerMap(requestType, responseType);
-            var behaviourMap = GetBehaviourMap(requestType, responseType);
+        var requestType = request.GetType();
+        var responseType = typeof(TResponse);
 
-            return new MediatorCacheEntry(
-                handlerMap,
-                behaviourMap);
+        return (SendDispatcherDelegateV2<TResponse>)_dispatcherCache.GetOrAdd((requestType, responseType), _ =>
+        {
+            var genericMethod = typeof(MediatorCacheMap)
+                .GetMethod(nameof(BuildDispatcher), BindingFlags.Public | BindingFlags.Instance)!;
+
+            var closedMethod = genericMethod.MakeGenericMethod(requestType, responseType);
+
+            var v1Dispatcher = (Delegate?)closedMethod.Invoke(this, null)
+                ?? throw new CqrsException($"Failed to create dispatcher for {requestType.Name}<{responseType.Name}>", requestType);
+
+            return WrapV1InV2Delegate<TResponse>(v1Dispatcher);
         });
     }
 
-    public Delegate GetOrAddDispatcher(Type requestType, Type responseType)
+    public SendDispatcherDelegate<TRequest, TResponse> BuildDispatcher<TRequest, TResponse>()
+             where TRequest : IRequest<TResponse>
     {
-        var genericMethod = typeof(MediatorCacheMap)
-            .GetMethod(nameof(GetOrAddDispatcherX), BindingFlags.Public | BindingFlags.Instance)!;
-
-        var closedMethod = genericMethod.MakeGenericMethod(requestType, responseType);
-
-        return (Delegate)closedMethod.Invoke(this, null)
-            ?? throw new CqrsException($"Failed to create dispatcher for {requestType.Name}<{responseType.Name}>", requestType);
-    }
-
-    public SendDispatcherDelegate<TRequest, TResponse> GetOrAddDispatcherX<TRequest, TResponse>()
-        where TRequest : IRequest<TResponse>
-    {
-        return (SendDispatcherDelegate<TRequest, TResponse>)_dispatcherCache.GetOrAdd((typeof(TRequest), typeof(TResponse)), _ =>
-        {
-            return SendDispatcher<TRequest, TResponse>.Create();
-        });
+        return SendDispatcher<TRequest, TResponse>.Create();
     }
 
     public MediatorCacheEntry GetOrAdd(Type requestType)
@@ -67,33 +59,6 @@ public class MediatorCacheMap
         {
             return GetNotificationHandlerMap(notificationType);
         });
-    }
-
-    private static MediatorMap GetHandlerMap(Type requestType, Type responseType)
-    {
-        var handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, responseType);
-        var handlerParamObj = Expression.Parameter(typeof(object), "handlerObj");
-        var requestParamObj = Expression.Parameter(typeof(object), "requestObj");
-        var ctParamObj = Expression.Parameter(typeof(object), "ctObj");
-
-        var handleMethod = handlerType.GetMethod("Handle", new[] { requestType, typeof(CancellationToken) })
-            ?? throw new CqrsException($"Cannot resolve Handle method for Handler: {handlerType.FullName}", handlerType);
-
-        var handlerExpr = Expression.Convert(handlerParamObj, handlerType);
-        var requestExpr = Expression.Convert(requestParamObj, requestType);
-        var ctExpr = Expression.Convert(ctParamObj, typeof(CancellationToken));
-
-        var callExpr = Expression.Call(handlerExpr, handleMethod, requestExpr, ctExpr);
-
-        var lambdaExpr = Expression.Lambda<Func<object, object, object, object>>(
-            callExpr,
-            handlerParamObj,
-            requestParamObj,
-            ctParamObj);
-
-        var handlerDelegate = lambdaExpr.Compile();
-
-        return new MediatorMap(handlerType, handlerDelegate);
     }
 
     private static MediatorMap GetHandlerMap(Type requestType)
@@ -121,38 +86,6 @@ public class MediatorCacheMap
         var handlerDelegate = lambdaExpr.Compile();
 
         return new MediatorMap(handlerType, handlerDelegate);
-    }
-
-    private static MediatorMap GetBehaviourMap(Type requestType, Type responseType)
-    {
-        var behaviourType = typeof(IPipelineBehavior<,>).MakeGenericType(requestType, responseType);
-        var nextType = typeof(RequestHandlerDelegate<>).MakeGenericType(responseType);
-
-        var behaviourParamObj = Expression.Parameter(typeof(object), "behaviourObj");
-        var inputParamObj = Expression.Parameter(typeof(object), "inputObj");
-        var requestNextObj = Expression.Parameter(typeof(object), "nextObj");
-        var ctParamObj = Expression.Parameter(typeof(object), "ctObj");
-
-        var behaviourMethod = behaviourType.GetMethod("Handle", new Type[] { requestType, nextType, typeof(CancellationToken) })
-            ?? throw new CqrsException($"Cannot resolve Handle method for Behaviour: {behaviourType.FullName}", behaviourType);
-
-        var behaviourExpr = Expression.Convert(behaviourParamObj, behaviourType);
-        var requestExpr = Expression.Convert(inputParamObj, requestType);
-        var nextExpr = Expression.Convert(requestNextObj, nextType);
-        var ctExpr = Expression.Convert(ctParamObj, typeof(CancellationToken));
-
-        var callExpr = Expression.Call(behaviourExpr, behaviourMethod, requestExpr, nextExpr, ctExpr);
-
-        var lambdaExpr = Expression.Lambda<Func<object, object, object, object, object>>(
-            callExpr,
-            behaviourParamObj,
-            inputParamObj,
-            requestNextObj,
-            ctParamObj);
-
-        var handlerDelegate = lambdaExpr.Compile();
-
-        return new MediatorMap(behaviourType, handlerDelegate);
     }
 
     private static MediatorMap GetBehaviourMap(Type requestType)
@@ -213,5 +146,14 @@ public class MediatorCacheMap
         var handlerDelegate = lambdaExpr.Compile();
 
         return new MediatorMap(handlerType, handlerDelegate);
+    }
+
+    private static SendDispatcherDelegateV2<TResponse> WrapV1InV2Delegate<TResponse>(Delegate v1Dispatcher)
+    {
+        return (provider, request, ct) =>
+        {
+            var result = (Task<TResponse>)v1Dispatcher.DynamicInvoke(provider, request, ct)!;
+            return result;
+        };
     }
 }

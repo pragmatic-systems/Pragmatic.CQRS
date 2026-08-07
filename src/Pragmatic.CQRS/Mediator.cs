@@ -16,37 +16,7 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
 
         try
         {
-            // TODO: Make resilient.
-            var genericMethod = typeof(Mediator)
-                .GetMethods()
-                .Where(m => m.Name == nameof(Send))
-                .Skip(1)
-                .First();
-
-            var closedMethod = genericMethod.MakeGenericMethod(requestType, responseType);
-
-            return await (Task<TResponse>)closedMethod.Invoke(this, new object[] { request, cancellationToken });
-        }
-        catch (OperationCanceledException)
-        {
-            throw;  // preserve cancellation semantics
-        }
-        catch (Exception ex)
-        {
-            logger?.LogError(ex, "Exception processing request '{RequestType}<{ResponseType}>'", requestType.FullName, responseType.FullName);
-            throw;
-        }
-    }
-
-    public async Task<TResponse> Send<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken = default)
-        where TRequest : IRequest<TResponse>
-    {
-        ArgumentNullException.ThrowIfNull(request);
-
-        try
-        {
-            var dispatcher = cacheMap.GetOrAddDispatcherX<TRequest, TResponse>();
-
+            var dispatcher = cacheMap.GetOrAddDispatcher(request);
             return await dispatcher(provider, request, cancellationToken);
         }
         catch (OperationCanceledException)
@@ -55,7 +25,7 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
         }
         catch (Exception ex)
         {
-            logger?.LogError(ex, "Exception processing request '{RequestType}<{ResponseType}>'", typeof(TRequest).FullName, typeof(TResponse).FullName);
+            logger?.LogError(ex, "Exception processing request '{RequestType}<{ResponseType}>'", requestType.FullName, responseType.FullName);
             throw;
         }
     }
@@ -169,6 +139,11 @@ public delegate Task<TResponse> SendDispatcherDelegate<TRequest, TResponse>(
     TRequest request,
     CancellationToken cancellationToken)
     where TRequest : IRequest<TResponse>;
+
+public delegate Task<TResponse> SendDispatcherDelegateV2<TResponse>(
+    IServiceProvider provider,
+    IRequest<TResponse> request,
+    CancellationToken cancellationToken);
 
 public static class SendDispatcher<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
