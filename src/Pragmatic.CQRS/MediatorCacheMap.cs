@@ -27,17 +27,16 @@ public class MediatorCacheMap
 
             var closedMethod = genericMethod.MakeGenericMethod(requestType, responseType);
 
-            var v1Dispatcher = (Delegate?)closedMethod.Invoke(this, null)
+            return (Delegate)closedMethod.Invoke(this, null)!
                 ?? throw new CqrsException($"Failed to create dispatcher for {requestType.Name}<{responseType.Name}>", requestType);
-
-            return WrapV1InV2Delegate<TResponse>(v1Dispatcher);
         });
     }
 
-    public SendDispatcherDelegate<TRequest, TResponse> BuildDispatcher<TRequest, TResponse>()
+    public SendDispatcherDelegateV2<TResponse> BuildDispatcher<TRequest, TResponse>()
              where TRequest : IRequest<TResponse>
     {
-        return SendDispatcher<TRequest, TResponse>.Create();
+        return (provider, request, ct) =>
+            SendDispatcher<TRequest, TResponse>.Send(provider, (TRequest)request, ct);
     }
 
     public MediatorCacheEntry GetOrAdd(Type requestType)
@@ -146,14 +145,5 @@ public class MediatorCacheMap
         var handlerDelegate = lambdaExpr.Compile();
 
         return new MediatorMap(handlerType, handlerDelegate);
-    }
-
-    private static SendDispatcherDelegateV2<TResponse> WrapV1InV2Delegate<TResponse>(Delegate v1Dispatcher)
-    {
-        return (provider, request, ct) =>
-        {
-            var result = (Task<TResponse>)v1Dispatcher.DynamicInvoke(provider, request, ct)!;
-            return result;
-        };
     }
 }
