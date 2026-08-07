@@ -169,3 +169,40 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
         await Task.WhenAll(tasks);
     }
 }
+
+public delegate Task<TResponse> SendDispatcherDelegate<TRequest, TResponse>(
+    IServiceProvider provider,
+    TRequest request,
+    CancellationToken cancellationToken)
+    where TRequest : IRequest<TResponse>;
+
+public static class SendDispatcher<TRequest, TResponse>
+    where TRequest : IRequest<TResponse>
+{
+    public static SendDispatcherDelegate<TRequest, TResponse> Create()
+    {
+        throw new NotImplementedException();
+    }
+
+    public static async Task<TResponse> Send(IServiceProvider provider, TRequest request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        // Transient lifespan here - can't cache and re-use.
+        var handler = provider.GetRequiredService<IRequestHandler<TRequest, TResponse>>();
+        var behaviors = provider.GetServices<IPipelineBehavior<TRequest, TResponse>>().Reverse();
+
+        RequestHandlerDelegate<TResponse> handlerDelegate = () => handler.Handle(request, cancellationToken);
+
+        foreach (var behavior in behaviors)
+        {
+            if (behavior == null)
+                continue;
+
+            var next = handlerDelegate;
+            handlerDelegate = () => behavior.Handle(request, next, cancellationToken);
+        }
+
+        return await handlerDelegate();
+    }
+}

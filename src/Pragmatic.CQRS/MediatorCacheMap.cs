@@ -11,6 +11,7 @@ public class MediatorCacheMap
 
     private readonly ConcurrentDictionary<(Type, Type?), MediatorCacheEntry> _cache = new();
     private readonly ConcurrentDictionary<Type, MediatorMap> _notificationCache = new();
+    private readonly ConcurrentDictionary<(Type, Type), Delegate> _dispatcherCache = new();
 
     public MediatorCacheEntry GetOrAdd(Type requestType, Type responseType)
     {
@@ -22,6 +23,15 @@ public class MediatorCacheMap
             return new MediatorCacheEntry(
                 handlerMap,
                 behaviourMap);
+        });
+    }
+
+    public SendDispatcherDelegate<TRequest, TResponse> GetOrAddDispatcher<TRequest, TResponse>()
+        where TRequest : IRequest<TResponse>
+    {
+        return (SendDispatcherDelegate<TRequest, TResponse>)_dispatcherCache.GetOrAdd((typeof(TRequest), typeof(TResponse)), _ =>
+        {
+            return SendDispatcher<TRequest, TResponse>.Create();
         });
     }
 
