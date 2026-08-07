@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Pragmatic.CQRS;
@@ -15,45 +16,16 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
 
         try
         {
-            var cacheEntry = cacheMap.GetOrAdd(requestType, responseType);
+            // TODO: Make resilient.
+            var genericMethod = typeof(Mediator)
+                .GetMethods()
+                .Where(m => m.Name == nameof(Send))
+                .Skip(1)
+                .First();
 
-            // Transient lifespan here - can't cache and re-use.
-            var handler = provider.GetService(cacheEntry.Handler.Type);
-            var behaviors = provider.GetServices(cacheEntry.Behaviour.Type).Reverse();
+            var closedMethod = genericMethod.MakeGenericMethod(requestType, responseType);
 
-            if (handler == null)
-            {
-                throw new CqrsException(
-                    $"No handler registered implementing IRequestHandler<{requestType.Name}, {responseType.Name}>.",
-                    cacheEntry.Handler.Type);
-            }
-
-            RequestHandlerDelegate<TResponse> handlerDelegate = () =>
-            {
-                var executionHandler = (Func<object, object, object, object>)cacheEntry.Handler.Method;
-                var result = executionHandler(handler, request, cancellationToken)
-                    ?? throw new CqrsException($"Cannot resolve handler method for Handler: {cacheEntry.Handler.Type.FullName}", cacheEntry.Handler.Type);
-
-                return (Task<TResponse>)result;
-            };
-
-            foreach (var behavior in behaviors)
-            {
-                if (behavior == null)
-                    continue;
-
-                var next = handlerDelegate;
-                handlerDelegate = () =>
-                {
-                    var executionHandler = (Func<object, object, object, object, object>)cacheEntry.Behaviour.Method;
-                    var result = executionHandler(behavior, request, next, cancellationToken)
-                        ?? throw new CqrsException($"Cannot resolve handler method for Behaviour: {cacheEntry.Behaviour.Type.FullName}", cacheEntry.Behaviour.Type);
-
-                    return (Task<TResponse>)result;
-                };
-            }
-
-            return await handlerDelegate();
+            return await (Task<TResponse>)closedMethod.Invoke(this, new object[] { request, cancellationToken });
         }
         catch (OperationCanceledException)
         {
@@ -62,6 +34,28 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
         catch (Exception ex)
         {
             logger?.LogError(ex, "Exception processing request '{RequestType}<{ResponseType}>'", requestType.FullName, responseType.FullName);
+            throw;
+        }
+    }
+
+    public async Task<TResponse> Send<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken = default)
+        where TRequest : IRequest<TResponse>
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        try
+        {
+            var dispatcher = cacheMap.GetOrAddDispatcherX<TRequest, TResponse>();
+
+            return await dispatcher(provider, request, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;  // preserve cancellation semantics
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Exception processing request '{RequestType}<{ResponseType}>'", typeof(TRequest).FullName, typeof(TResponse).FullName);
             throw;
         }
     }
@@ -181,7 +175,7 @@ public static class SendDispatcher<TRequest, TResponse>
 {
     public static SendDispatcherDelegate<TRequest, TResponse> Create()
     {
-        throw new NotImplementedException();
+        return Send;
     }
 
     public static async Task<TResponse> Send(IServiceProvider provider, TRequest request, CancellationToken cancellationToken = default)
@@ -189,8 +183,14 @@ public static class SendDispatcher<TRequest, TResponse>
         ArgumentNullException.ThrowIfNull(request);
 
         // Transient lifespan here - can't cache and re-use.
-        var handler = provider.GetRequiredService<IRequestHandler<TRequest, TResponse>>();
+        var handler = provider.GetService<IRequestHandler<TRequest, TResponse>>();
         var behaviors = provider.GetServices<IPipelineBehavior<TRequest, TResponse>>().Reverse();
+
+        if (handler == null)
+        {
+            throw new CqrsException(
+                $"No handler registered implementing IRequestHandler<{typeof(TRequest).Name}, {typeof(TResponse).Name}>.");
+        }
 
         RequestHandlerDelegate<TResponse> handlerDelegate = () => handler.Handle(request, cancellationToken);
 

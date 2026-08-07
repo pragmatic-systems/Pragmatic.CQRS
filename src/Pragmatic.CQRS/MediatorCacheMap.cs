@@ -1,5 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq.Expressions;
+using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Pragmatic.CQRS;
 
@@ -26,7 +28,18 @@ public class MediatorCacheMap
         });
     }
 
-    public SendDispatcherDelegate<TRequest, TResponse> GetOrAddDispatcher<TRequest, TResponse>()
+    public Delegate GetOrAddDispatcher(Type requestType, Type responseType)
+    {
+        var genericMethod = typeof(MediatorCacheMap)
+            .GetMethod(nameof(GetOrAddDispatcherX), BindingFlags.Public | BindingFlags.Instance)!;
+
+        var closedMethod = genericMethod.MakeGenericMethod(requestType, responseType);
+
+        return (Delegate)closedMethod.Invoke(this, null)
+            ?? throw new CqrsException($"Failed to create dispatcher for {requestType.Name}<{responseType.Name}>", requestType);
+    }
+
+    public SendDispatcherDelegate<TRequest, TResponse> GetOrAddDispatcherX<TRequest, TResponse>()
         where TRequest : IRequest<TResponse>
     {
         return (SendDispatcherDelegate<TRequest, TResponse>)_dispatcherCache.GetOrAdd((typeof(TRequest), typeof(TResponse)), _ =>
