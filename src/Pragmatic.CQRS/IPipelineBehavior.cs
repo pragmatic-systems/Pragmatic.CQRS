@@ -4,10 +4,10 @@ public interface IPipelineBehavior { }
 
 public interface IPipelineBehavior<in TInput, TOutput> : IPipelineBehavior
 {
-    ValueTask<TOutput> Handle(TInput input, RequestHandlerDelegate<TOutput> next, CancellationToken cancellationToken = default);
+    Task<TOutput> Handle(TInput input, RequestHandlerDelegate<TOutput> next, CancellationToken cancellationToken = default);
 }
 
-public interface IPipelineBehavior<in TInput> : IPipelineBehavior
+public struct Unit
 {
-    ValueTask Handle(TInput input, RequestHandlerDelegate next, CancellationToken cancellationToken = default);
+    public static readonly Unit Instance = default;
 }

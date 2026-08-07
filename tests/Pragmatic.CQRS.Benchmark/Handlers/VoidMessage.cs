@@ -1,8 +1,8 @@
-﻿using Pragmatic.CQRS;
+﻿using System.Reflection.Metadata;
 
 namespace Pragmatic.CQRS.Benchmark.Handlers;
 
-public class VoidMessage : IRequest
+public class VoidMessage : Pragmatic.CQRS.IRequest, MediatR.IRequest
 {
     public VoidMessage(int count)
         => Count = count;
@@ -10,10 +10,17 @@ public class VoidMessage : IRequest
     public int Count { get; set; }
 }
 
-public class VoidMessageHandler : IRequestHandler<VoidMessage>
+public class VoidMessageHandler
+    : Pragmatic.CQRS.IRequestHandler<VoidMessage>,
+      MediatR.IRequestHandler<VoidMessage>
 {
-    public ValueTask Handle(VoidMessage request, CancellationToken cancellationToken = default)
+    Task Pragmatic.CQRS.IRequestHandler<VoidMessage>.Handle(VoidMessage request, CancellationToken cancellationToken = default)
     {
-        return ValueTask.CompletedTask;
+        return Task.CompletedTask;
+    }
+
+    Task MediatR.IRequestHandler<VoidMessage>.Handle(VoidMessage request, CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
     }
 }

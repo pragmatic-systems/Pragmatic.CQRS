@@ -1,8 +1,9 @@
-﻿using Pragmatic.CQRS;
+﻿using System.Reflection.Metadata;
+using MediatR;
 
 namespace Pragmatic.CQRS.Benchmark.Handlers;
 
-public class VoidPipelineMessage : IRequest
+public class VoidPipelineMessage : Pragmatic.CQRS.IRequest, MediatR.IRequest
 {
     public VoidPipelineMessage(int count)
         => Count = count;
@@ -10,18 +11,32 @@ public class VoidPipelineMessage : IRequest
     public int Count { get; set; }
 }
 
-public class VoidPipelineMessageHandler : IRequestHandler<VoidPipelineMessage>
+public class VoidPipelineMessageHandler
+    : Pragmatic.CQRS.IRequestHandler<VoidPipelineMessage>,
+      MediatR.IRequestHandler<VoidPipelineMessage>
 {
-    public ValueTask Handle(VoidPipelineMessage request, CancellationToken cancellationToken = default)
+    Task Pragmatic.CQRS.IRequestHandler<VoidPipelineMessage>.Handle(VoidPipelineMessage request, CancellationToken cancellationToken = default)
     {
-        return ValueTask.CompletedTask;
+        return Task.CompletedTask;
+    }
+
+    Task MediatR.IRequestHandler<VoidPipelineMessage>.Handle(VoidPipelineMessage request, CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
     }
 }
 
-public class VoidPipelineBehaviourHandler : IPipelineBehavior<VoidPipelineMessage>
+public class VoidPipelineBehaviourHandler
+    : Pragmatic.CQRS.IPipelineBehavior<VoidPipelineMessage, Unit>,
+      MediatR.IPipelineBehavior<VoidPipelineMessage, MediatR.Unit>
 {
-    public async ValueTask Handle(VoidPipelineMessage input, RequestHandlerDelegate next, CancellationToken cancellationToken = default)
+    async Task<Unit> Pragmatic.CQRS.IPipelineBehavior<VoidPipelineMessage, Unit>.Handle(VoidPipelineMessage input, Pragmatic.CQRS.RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken = default)
     {
-        await next();
+        return await next();
+    }
+
+    async Task<MediatR.Unit> MediatR.IPipelineBehavior<VoidPipelineMessage, MediatR.Unit>.Handle(VoidPipelineMessage request, MediatR.RequestHandlerDelegate<MediatR.Unit> next, CancellationToken cancellationToken)
+    {
+        return await next();
     }
 }

@@ -1,6 +1,8 @@
-﻿namespace Pragmatic.CQRS.Benchmark.Handlers;
+﻿using System.Reflection.Metadata;
 
-public class EchoMessage : IRequest<int>
+namespace Pragmatic.CQRS.Benchmark.Handlers;
+
+public class EchoMessage : Pragmatic.CQRS.IRequest<int>, MediatR.IRequest<int>
 {
     public EchoMessage(int count)
         => Count = count;
@@ -8,15 +10,22 @@ public class EchoMessage : IRequest<int>
     public int Count { get; set; }
 }
 
-public class EchoMessageHandler : IRequestHandler<EchoMessage, int>
+public class EchoMessageHandler
+    : Pragmatic.CQRS.IRequestHandler<EchoMessage, int>,
+      MediatR.IRequestHandler<EchoMessage, int>
 {
-    public ValueTask<int> Handle(EchoMessage request, CancellationToken cancellationToken = default)
+    Task<int> Pragmatic.CQRS.IRequestHandler<EchoMessage, int>.Handle(EchoMessage request, CancellationToken cancellationToken = default)
     {
-        return new ValueTask<int>(request.Count);
+        return Task.FromResult(request.Count);
+    }
+
+    Task<int> MediatR.IRequestHandler<EchoMessage, int>.Handle(EchoMessage request, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(request.Count);
     }
 }
 
-public class EchoPipelineMessage : IRequest<int>
+public class EchoPipelineMessage : Pragmatic.CQRS.IRequest<int>, MediatR.IRequest<int>
 {
     public EchoPipelineMessage(int count)
         => Count = count;
@@ -24,17 +33,31 @@ public class EchoPipelineMessage : IRequest<int>
     public int Count { get; set; }
 }
 
-public class EchoPipelineMessageHandler : IRequestHandler<EchoPipelineMessage, int>
+public class EchoPipelineMessageHandler
+    : Pragmatic.CQRS.IRequestHandler<EchoPipelineMessage, int>,
+      MediatR.IRequestHandler<EchoPipelineMessage, int>
 {
-    public ValueTask<int> Handle(EchoPipelineMessage request, CancellationToken cancellationToken = default)
+    Task<int> Pragmatic.CQRS.IRequestHandler<EchoPipelineMessage, int>.Handle(EchoPipelineMessage request, CancellationToken cancellationToken = default)
     {
-        return new ValueTask<int>(request.Count);
+        return Task.FromResult(request.Count);
+    }
+
+    Task<int> MediatR.IRequestHandler<EchoPipelineMessage, int>.Handle(EchoPipelineMessage request, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(request.Count);
     }
 }
 
-public class EchoPipelineBehaviourHandler : IPipelineBehavior<EchoPipelineMessage, int>
+public class EchoPipelineBehaviourHandler
+    : Pragmatic.CQRS.IPipelineBehavior<EchoPipelineMessage, int>,
+      MediatR.IPipelineBehavior<EchoPipelineMessage, int>
 {
-    public async ValueTask<int> Handle(EchoPipelineMessage input, RequestHandlerDelegate<int> next, CancellationToken cancellationToken = default)
+    async Task<int> Pragmatic.CQRS.IPipelineBehavior<EchoPipelineMessage, int>.Handle(EchoPipelineMessage input, Pragmatic.CQRS.RequestHandlerDelegate<int> next, CancellationToken cancellationToken = default)
+    {
+        return await next();
+    }
+
+    async Task<int> MediatR.IPipelineBehavior<EchoPipelineMessage, int>.Handle(EchoPipelineMessage request, MediatR.RequestHandlerDelegate<int> next, CancellationToken cancellationToken)
     {
         return await next();
     }

@@ -25,22 +25,12 @@ public static class TestExtensions
 
             var rootDef = targetInterface.GetGenericTypeDefinition();
 
-            if (rootDef == typeof(IPipelineBehavior<>))
-            {
-                var requestType = targetInterface.GetGenericArguments()[0];
-                services.AddSingleton(
-                    typeof(IPipelineBehavior<>).MakeGenericType(requestType),
-                    pipeline);
-            }
-            else if (rootDef == typeof(IPipelineBehavior<,>))
-            {
-                var requestType = targetInterface.GetGenericArguments()[0];
-                var resultType = targetInterface.GetGenericArguments()[1];
+            var requestType = targetInterface.GetGenericArguments()[0];
+            var resultType = targetInterface.GetGenericArguments()[1];
 
-                services.AddSingleton(
-                    typeof(IPipelineBehavior<,>).MakeGenericType(requestType, resultType),
-                    pipeline);
-            }
+            services.AddSingleton(
+                typeof(IPipelineBehavior<,>).MakeGenericType(requestType, resultType),
+                pipeline);
         }
 
         return services;
