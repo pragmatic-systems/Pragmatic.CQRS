@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Pragmatic.CQRS;
@@ -16,8 +15,8 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
 
         try
         {
-            var dispatcher = cacheMap.GetOrAddDispatcher(request);
-            return await dispatcher(provider, request, cancellationToken);
+            var dispatcher = cacheMap.GetOrAddDispatcher<TResponse>(requestType, responseType);
+            return await dispatcher.Invoke(provider, request, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -39,8 +38,8 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
 
         try
         {
-            var dispatcher = cacheMap.GetOrAddDispatcherVoid(request);
-            await dispatcher(provider, request, cancellationToken);
+            var dispatcher = cacheMap.GetOrAddDispatcherVoid(requestType);
+            await dispatcher.Invoke(provider, request, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -93,94 +92,5 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
         }).ToArray();
 
         await Task.WhenAll(tasks);
-    }
-}
-
-public delegate Task<TResponse> SendDispatcherDelegate<TRequest, TResponse>(
-    IServiceProvider provider,
-    TRequest request,
-    CancellationToken cancellationToken)
-    where TRequest : IRequest<TResponse>;
-
-public delegate Task<TResponse> SendDispatcherDelegateV2<TResponse>(
-    IServiceProvider provider,
-    IRequest<TResponse> request,
-    CancellationToken cancellationToken);
-
-public delegate Task SendDispatcherDelegateV2Void(
-    IServiceProvider provider,
-    IRequest request,
-    CancellationToken cancellationToken);
-
-public static class SendDispatcher<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
-{
-    public static SendDispatcherDelegate<TRequest, TResponse> Create()
-    {
-        return Send;
-    }
-
-    public static async Task<TResponse> Send(IServiceProvider provider, TRequest request, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-
-        // Transient lifespan here - can't cache and re-use.
-        var handler = provider.GetService<IRequestHandler<TRequest, TResponse>>();
-        var behaviors = provider.GetServices<IPipelineBehavior<TRequest, TResponse>>().Reverse();
-
-        if (handler == null)
-        {
-            throw new CqrsException(
-                $"No handler registered implementing IRequestHandler<{typeof(TRequest).Name}, {typeof(TResponse).Name}>.");
-        }
-
-        RequestHandlerDelegate<TResponse> handlerDelegate = () => handler.Handle(request, cancellationToken);
-
-        foreach (var behavior in behaviors)
-        {
-            if (behavior == null)
-                continue;
-
-            var next = handlerDelegate;
-            handlerDelegate = () => behavior.Handle(request, next, cancellationToken);
-        }
-
-        return await handlerDelegate();
-    }
-}
-
-public static class SendDispatcherVoid<TRequest>
-    where TRequest : IRequest
-{
-    public static async Task Send(IServiceProvider provider, TRequest request, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-
-        // Transient lifespan here - can't cache and re-use.
-        var handler = provider.GetService<IRequestHandler<TRequest>>();
-        var behaviors = provider.GetServices<IPipelineBehavior<TRequest, Unit>>().Reverse();
-
-        if (handler == null)
-        {
-            throw new CqrsException(
-                $"No handler registered implementing IRequestHandler<{typeof(TRequest).Name}>.");
-        }
-
-        RequestHandlerDelegate<Unit> handlerDelegate = async () =>
-        {
-            await handler.Handle(request, cancellationToken);
-            return Unit.Instance;
-        };
-
-        foreach (var behavior in behaviors)
-        {
-            if (behavior == null)
-                continue;
-
-            var next = handlerDelegate;
-            handlerDelegate = () => behavior.Handle(request, next, cancellationToken);
-        }
-
-        await handlerDelegate();
     }
 }

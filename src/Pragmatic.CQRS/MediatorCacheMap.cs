@@ -12,53 +12,26 @@ public class MediatorCacheMap
     public sealed record MediatorCacheEntry(MediatorMap Handler, MediatorMap Behaviour);
 
     private readonly ConcurrentDictionary<Type, MediatorMap> _notificationCache = new();
-    private readonly ConcurrentDictionary<(Type, Type), Delegate> _dispatcherCache = new();
+    private readonly ConcurrentDictionary<(Type RequestType, Type ResponseType), object> _dispatcherCache = new();
 
-    public SendDispatcherDelegateV2<TResponse> GetOrAddDispatcher<TResponse>(IRequest<TResponse> request)
+    public ISendDispatcher<TResponse> GetOrAddDispatcher<TResponse>(Type requestType, Type responseType)
     {
-        var requestType = request.GetType();
-        var responseType = typeof(TResponse);
-
-        return (SendDispatcherDelegateV2<TResponse>)_dispatcherCache.GetOrAdd((requestType, responseType), _ =>
+        return (ISendDispatcher<TResponse>)_dispatcherCache.GetOrAdd((requestType, responseType), _ =>
         {
-            var genericMethod = typeof(MediatorCacheMap)
-                .GetMethod(nameof(BuildDispatcher), BindingFlags.Public | BindingFlags.Instance)!;
-
-            var closedMethod = genericMethod.MakeGenericMethod(requestType, responseType);
-
-            return (Delegate)closedMethod.Invoke(this, null)!
+            var dispatcherType = typeof(SendDispatcher<,>).MakeGenericType(requestType, responseType);
+            return Activator.CreateInstance(dispatcherType)
                 ?? throw new CqrsException($"Failed to create dispatcher for {requestType.Name}<{responseType.Name}>", requestType);
         });
     }
 
-    public SendDispatcherDelegateV2<TResponse> BuildDispatcher<TRequest, TResponse>()
-             where TRequest : IRequest<TResponse>
+    public ISendDispatcher GetOrAddDispatcherVoid(Type requestType)
     {
-        return (provider, request, ct) =>
-            SendDispatcher<TRequest, TResponse>.Send(provider, (TRequest)request, ct);
-    }
-
-    public SendDispatcherDelegateV2Void GetOrAddDispatcherVoid(IRequest request)
-    {
-        var requestType = request.GetType();
-
-        return (SendDispatcherDelegateV2Void)_dispatcherCache.GetOrAdd((requestType, typeof(Unit)), _ =>
+        return (ISendDispatcher)_dispatcherCache.GetOrAdd((requestType, typeof(Unit)), _ =>
         {
-            var genericMethod = typeof(MediatorCacheMap)
-                .GetMethod(nameof(BuildDispatcherVoid), BindingFlags.Public | BindingFlags.Instance)!;
-
-            var closedMethod = genericMethod.MakeGenericMethod(requestType);
-
-            return (Delegate)closedMethod.Invoke(this, null)!
+            var dispatcherType = typeof(SendDispatcher<>).MakeGenericType(requestType);
+            return Activator.CreateInstance(dispatcherType)
                 ?? throw new CqrsException($"Failed to create void dispatcher for {requestType.Name}", requestType);
         });
-    }
-
-    public SendDispatcherDelegateV2Void BuildDispatcherVoid<TRequest>()
-        where TRequest : IRequest
-    {
-        return (provider, request, ct) =>
-            SendDispatcherVoid<TRequest>.Send(provider, (TRequest)request, ct);
     }
 
     public MediatorMap GetOrAddNotification(Type notificationType)
@@ -95,4 +68,14 @@ public class MediatorCacheMap
 
         return new MediatorMap(handlerType, handlerDelegate);
     }
+}
+
+public interface ISendDispatcher<TResponse>
+{
+    Task<TResponse> Invoke(IServiceProvider provider, IRequest<TResponse> request, CancellationToken cancellationToken);
+}
+
+public interface ISendDispatcher
+{
+    Task Invoke(IServiceProvider provider, IRequest request, CancellationToken cancellationToken);
 }
