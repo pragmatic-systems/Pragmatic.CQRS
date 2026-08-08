@@ -14,9 +14,9 @@ public class MediatorCacheMap
     private readonly ConcurrentDictionary<Type, MediatorMap> _notificationCache = new();
     private readonly ConcurrentDictionary<(Type RequestType, Type ResponseType), object> _dispatcherCache = new();
 
-    public ISendDispatcher<TResponse> GetOrAddDispatcher<TResponse>(Type requestType, Type responseType)
+    public SendDispatcherBase<TResponse> GetOrAddDispatcher<TResponse>(Type requestType, Type responseType)
     {
-        return (ISendDispatcher<TResponse>)_dispatcherCache.GetOrAdd((requestType, responseType), _ =>
+        return (SendDispatcherBase<TResponse>)_dispatcherCache.GetOrAdd((requestType, responseType), _ =>
         {
             var dispatcherType = typeof(SendDispatcher<,>).MakeGenericType(requestType, responseType);
             return Activator.CreateInstance(dispatcherType)
@@ -24,9 +24,9 @@ public class MediatorCacheMap
         });
     }
 
-    public ISendDispatcher GetOrAddDispatcherVoid(Type requestType)
+    public SendDispatcherBaseVoid GetOrAddDispatcherVoid(Type requestType)
     {
-        return (ISendDispatcher)_dispatcherCache.GetOrAdd((requestType, typeof(Unit)), _ =>
+        return (SendDispatcherBaseVoid)_dispatcherCache.GetOrAdd((requestType, typeof(Unit)), _ =>
         {
             var dispatcherType = typeof(SendDispatcher<>).MakeGenericType(requestType);
             return Activator.CreateInstance(dispatcherType)
@@ -70,12 +70,12 @@ public class MediatorCacheMap
     }
 }
 
-public interface ISendDispatcher<TResponse>
+public abstract class SendDispatcherBase<TResponse>
 {
-    Task<TResponse> Invoke(IServiceProvider provider, IRequest<TResponse> request, CancellationToken cancellationToken);
+    public abstract Task<TResponse> Invoke(IServiceProvider provider, IRequest<TResponse> request, CancellationToken cancellationToken);
 }
 
-public interface ISendDispatcher
+public abstract class SendDispatcherBaseVoid
 {
-    Task Invoke(IServiceProvider provider, IRequest request, CancellationToken cancellationToken);
+    public abstract Task Invoke(IServiceProvider provider, IRequest request, CancellationToken cancellationToken);
 }

@@ -2,10 +2,10 @@
 
 namespace Pragmatic.CQRS;
 
-public class SendDispatcher<TRequest, TResponse> : ISendDispatcher<TResponse>
+public class SendDispatcher<TRequest, TResponse> : SendDispatcherBase<TResponse>
     where TRequest : IRequest<TResponse>
 {
-    public async Task<TResponse> Invoke(IServiceProvider provider, IRequest<TResponse> request, CancellationToken cancellationToken = default)
+    public override async Task<TResponse> Invoke(IServiceProvider provider, IRequest<TResponse> request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -35,10 +35,10 @@ public class SendDispatcher<TRequest, TResponse> : ISendDispatcher<TResponse>
     }
 }
 
-public class SendDispatcher<TRequest> : ISendDispatcher
+public class SendDispatcher<TRequest> : SendDispatcherBaseVoid
     where TRequest : IRequest
 {
-    public async Task Invoke(IServiceProvider provider, IRequest request, CancellationToken cancellationToken = default)
+    public override async Task Invoke(IServiceProvider provider, IRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
