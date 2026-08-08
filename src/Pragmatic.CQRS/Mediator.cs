@@ -6,50 +6,26 @@ namespace Pragmatic.CQRS;
 public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILogger<Mediator>? logger = null)
     : IMediator
 {
-    public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
+    public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         var requestType = request.GetType();
         var responseType = typeof(TResponse);
 
-        try
-        {
-            var dispatcher = cacheMap.GetOrAddDispatcher<TResponse>(requestType, responseType);
-            return await dispatcher.Invoke(provider, request, cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            throw;  // preserve cancellation semantics
-        }
-        catch (Exception ex)
-        {
-            logger?.LogError(ex, "Exception processing request '{RequestType}<{ResponseType}>'", requestType.FullName, responseType.FullName);
-            throw;
-        }
+        var dispatcher = cacheMap.GetOrAddDispatcher<TResponse>(requestType, responseType);
+        return dispatcher.Invoke(provider, request, cancellationToken);
     }
 
-    public async Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
+    public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
         where TRequest : IRequest
     {
         ArgumentNullException.ThrowIfNull(request);
 
         var requestType = request.GetType();
 
-        try
-        {
-            var dispatcher = cacheMap.GetOrAddDispatcherVoid(requestType);
-            await dispatcher.Invoke(provider, request, cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            throw;  // preserve cancellation semantics
-        }
-        catch (Exception ex)
-        {
-            logger?.LogError(ex, "Exception processing request '{RequestType}'", requestType.FullName);
-            throw;
-        }
+        var dispatcher = cacheMap.GetOrAddDispatcherVoid(requestType);
+        return dispatcher.Invoke(provider, request, cancellationToken);
     }
 
     public async Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
