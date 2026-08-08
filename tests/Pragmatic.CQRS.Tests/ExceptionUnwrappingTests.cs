@@ -104,8 +104,8 @@ public class ExceptionUnwrappingTests
     {
         var mediator = BuildMediator<IRequestHandler<ThrowingQuery, int>, ThrowingQueryHandler>();
 
-        var exception = await mediator.Send(new ThrowingQuery(), TestContext.Current.CancellationToken)
-            .ShouldThrowAsync<TestBusinessException>();
+        var exception = Should.Throw<TestBusinessException>(() =>
+            mediator.Send(new ThrowingQuery(), TestContext.Current.CancellationToken));
 
         exception.Message.ShouldBe("boom");
         exception.InnerException.ShouldBeNull();
@@ -116,8 +116,8 @@ public class ExceptionUnwrappingTests
     {
         var mediator = BuildMediator<IRequestHandler<VoidThrowingCommand>, VoidThrowingCommandHandler>();
 
-        var exception = await mediator.Send(new VoidThrowingCommand(), TestContext.Current.CancellationToken)
-            .ShouldThrowAsync<TestBusinessException>();
+        var exception = Should.Throw<TestBusinessException>(() =>
+            mediator.Send(new VoidThrowingCommand(), TestContext.Current.CancellationToken));
 
         exception.Message.ShouldBe("void boom");
         exception.InnerException.ShouldBeNull();
@@ -131,8 +131,8 @@ public class ExceptionUnwrappingTests
             behavior,
             (IServiceCollection sc) => sc.AddSingleton<IRequestHandler<BehaviorTestQuery, int>, BehaviorTestHandler>());
 
-        var exception = await mediator.Send(new BehaviorTestQuery(), TestContext.Current.CancellationToken)
-            .ShouldThrowAsync<TestBusinessException>();
+        var exception = Should.Throw<TestBusinessException>(() =>
+            mediator.Send(new BehaviorTestQuery(), TestContext.Current.CancellationToken));
 
         exception.Message.ShouldBe("behavior boom");
         behavior.Log.ShouldBe(["before"]);
@@ -157,8 +157,8 @@ public class ExceptionUnwrappingTests
     {
         var mediator = BuildMediator<IRequestHandler<InnerChainQuery, string>, InnerChainQueryHandler>();
 
-        var exception = await mediator.Send(new InnerChainQuery(), TestContext.Current.CancellationToken)
-            .ShouldThrowAsync<TestBusinessException>();
+        var exception = Should.Throw<TestBusinessException>(() =>
+            mediator.Send(new InnerChainQuery(), TestContext.Current.CancellationToken));
 
         exception.InnerException.ShouldBeOfType<DivideByZeroException>();
         exception.InnerException!.Message.ShouldBe("divide");

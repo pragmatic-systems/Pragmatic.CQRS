@@ -36,7 +36,8 @@ public class MediatorTests
         var provider = BuildContainer();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        await mediator.Send(new LoggingQuery(1), cts.Token).ShouldThrowAsync<OperationCanceledException>();
+        Should.Throw<OperationCanceledException>(() =>
+            mediator.Send(new LoggingQuery(1), cts.Token));
     }
 
     [Fact]
@@ -64,7 +65,8 @@ public class MediatorTests
         var provider = BuildContainer();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        await mediator.Send(new VoidLoggingCommand(), cts.Token).ShouldThrowAsync<OperationCanceledException>();
+        Should.Throw<OperationCanceledException>(() =>
+            mediator.Send(new VoidLoggingCommand(), cts.Token));
     }
 
     [Fact]
@@ -123,7 +125,8 @@ public class MediatorTests
         var provider = BuildContainer();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        await mediator.Send(new UnknownQuery(), TestContext.Current.CancellationToken).ShouldThrowAsync<CqrsException>();
+        Should.Throw<CqrsException>(() =>
+            mediator.Send(new UnknownQuery(), TestContext.Current.CancellationToken));
     }
 
     [Fact]
