@@ -24,9 +24,9 @@ public class MediatorCacheMap
         });
     }
 
-    public SendDispatcherBaseVoid GetOrAddDispatcherVoid(Type requestType)
+    public SendDispatcherBase GetOrAddDispatcherVoid(Type requestType)
     {
-        return (SendDispatcherBaseVoid)_dispatcherCache.GetOrAdd((requestType, typeof(Unit)), _ =>
+        return (SendDispatcherBase)_dispatcherCache.GetOrAdd((requestType, typeof(Unit)), _ =>
         {
             var dispatcherType = typeof(SendDispatcher<>).MakeGenericType(requestType);
             return Activator.CreateInstance(dispatcherType)
@@ -75,7 +75,7 @@ public abstract class SendDispatcherBase<TResponse>
     public abstract Task<TResponse> Invoke(IServiceProvider provider, IRequest<TResponse> request, CancellationToken cancellationToken);
 }
 
-public abstract class SendDispatcherBaseVoid
+public abstract class SendDispatcherBase
 {
     public abstract Task Invoke(IServiceProvider provider, IRequest request, CancellationToken cancellationToken);
 }

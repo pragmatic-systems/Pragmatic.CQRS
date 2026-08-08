@@ -35,7 +35,7 @@ public class SendDispatcher<TRequest, TResponse> : SendDispatcherBase<TResponse>
     }
 }
 
-public class SendDispatcher<TRequest> : SendDispatcherBaseVoid
+public class SendDispatcher<TRequest> : SendDispatcherBase
     where TRequest : IRequest
 {
     public override async Task Invoke(IServiceProvider provider, IRequest request, CancellationToken cancellationToken = default)
