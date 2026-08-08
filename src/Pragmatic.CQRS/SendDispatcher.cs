@@ -11,7 +11,7 @@ public class SendDispatcher<TRequest, TResponse> : ISendDispatcher<TResponse>
 
         // Transient lifespan here - can't cache and re-use.
         var handler = provider.GetService<IRequestHandler<TRequest, TResponse>>();
-        var behaviors = provider.GetServices<IPipelineBehavior<TRequest, TResponse>>().Reverse();
+        var behaviors = provider.GetServices<IPipelineBehavior<TRequest, TResponse>>().ToArray();
 
         if (handler == null)
         {
@@ -19,18 +19,19 @@ public class SendDispatcher<TRequest, TResponse> : ISendDispatcher<TResponse>
                 $"No handler registered implementing IRequestHandler<{typeof(TRequest).Name}, {typeof(TResponse).Name}>.");
         }
 
-        RequestHandlerDelegate<TResponse> handlerDelegate = () => handler.Handle((TRequest)request, cancellationToken);
+        RequestHandlerDelegate<TResponse> next = () => handler.Handle((TRequest)request, cancellationToken);
 
-        foreach (var behavior in behaviors)
+        for (int i = behaviors.Length - 1; i >= 0; i--)
         {
+            var behavior = behaviors[i];
             if (behavior == null)
                 continue;
 
-            var next = handlerDelegate;
-            handlerDelegate = () => behavior.Handle((TRequest)request, next, cancellationToken);
+            var capturedNext = next;
+            next = () => behavior.Handle((TRequest)request, capturedNext, cancellationToken);
         }
 
-        return await handlerDelegate();
+        return await next();
     }
 }
 
@@ -43,7 +44,7 @@ public class SendDispatcher<TRequest> : ISendDispatcher
 
         // Transient lifespan here - can't cache and re-use.
         var handler = provider.GetService<IRequestHandler<TRequest>>();
-        var behaviors = provider.GetServices<IPipelineBehavior<TRequest, Unit>>().Reverse();
+        var behaviors = provider.GetServices<IPipelineBehavior<TRequest, Unit>>().ToArray();
 
         if (handler == null)
         {
@@ -51,21 +52,22 @@ public class SendDispatcher<TRequest> : ISendDispatcher
                 $"No handler registered implementing IRequestHandler<{typeof(TRequest).Name}>.");
         }
 
-        RequestHandlerDelegate<Unit> handlerDelegate = async () =>
+        RequestHandlerDelegate<Unit> next = async () =>
         {
             await handler.Handle((TRequest)request, cancellationToken);
             return Unit.Instance;
         };
 
-        foreach (var behavior in behaviors)
+        for (int i = behaviors.Length - 1; i >= 0; i--)
         {
+            var behavior = behaviors[i];
             if (behavior == null)
                 continue;
 
-            var next = handlerDelegate;
-            handlerDelegate = () => behavior.Handle((TRequest)request, next, cancellationToken);
+            var capturedNext = next;
+            next = () => behavior.Handle((TRequest)request, capturedNext, cancellationToken);
         }
 
-        await handlerDelegate();
+        await next();
     }
 }
