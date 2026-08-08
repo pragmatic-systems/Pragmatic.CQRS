@@ -19,7 +19,7 @@ public class SendDispatcher<TRequest, TResponse> : SendDispatcherBase<TResponse>
                 $"No handler registered implementing IRequestHandler<{typeof(TRequest).Name}, {typeof(TResponse).Name}>.");
         }
 
-        RequestHandlerDelegate<TResponse> next = () => handler.Handle((TRequest)request, cancellationToken);
+        RequestHandlerDelegate<TResponse> next = ct => handler.Handle((TRequest)request, ct);
 
         for (int i = behaviors.Length - 1; i >= 0; i--)
         {
@@ -28,10 +28,10 @@ public class SendDispatcher<TRequest, TResponse> : SendDispatcherBase<TResponse>
                 continue;
 
             var capturedNext = next;
-            next = () => behavior.Handle((TRequest)request, capturedNext, cancellationToken);
+            next = ct => behavior.Handle((TRequest)request, capturedNext, ct);
         }
 
-        return next();
+        return next(cancellationToken);
     }
 }
 
@@ -52,9 +52,9 @@ public class SendDispatcher<TRequest> : SendDispatcherBase
                 $"No handler registered implementing IRequestHandler<{typeof(TRequest).Name}>.");
         }
 
-        RequestHandlerDelegate<Unit> next = () =>
+        RequestHandlerDelegate<Unit> next = ct =>
         {
-            handler.Handle((TRequest)request, cancellationToken);
+            handler.Handle((TRequest)request, ct);
             return Task.FromResult(Unit.Instance);
         };
 
@@ -65,9 +65,9 @@ public class SendDispatcher<TRequest> : SendDispatcherBase
                 continue;
 
             var capturedNext = next;
-            next = () => behavior.Handle((TRequest)request, capturedNext, cancellationToken);
+            next = ct => behavior.Handle((TRequest)request, capturedNext, ct);
         }
 
-        return next();
+        return next(cancellationToken);
     }
 }
