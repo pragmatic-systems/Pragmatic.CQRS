@@ -52,10 +52,10 @@ public class SendDispatcher<TRequest> : SendDispatcherBase
                 $"No handler registered implementing IRequestHandler<{typeof(TRequest).Name}>.");
         }
 
-        RequestHandlerDelegate<Unit> next = ct =>
+        RequestHandlerDelegate<Unit> next = async ct =>
         {
-            handler.Handle((TRequest)request, ct);
-            return Task.FromResult(Unit.Instance);
+            await handler.Handle((TRequest)request, ct);
+            return Unit.Instance;
         };
 
         for (int i = behaviors.Length - 1; i >= 0; i--)
