@@ -19,7 +19,9 @@ public class SendDispatcher<TRequest, TResponse> : SendDispatcherBase<TResponse>
                 $"No handler registered implementing IRequestHandler<{typeof(TRequest).Name}, {typeof(TResponse).Name}>.");
         }
 
-        RequestHandlerDelegate<TResponse> next = ct => handler.Handle((TRequest)request, ct);
+        var typedRequest = (TRequest)request;
+
+        RequestHandlerDelegate<TResponse> next = ct => handler.Handle(typedRequest, ct);
 
         for (int i = behaviors.Length - 1; i >= 0; i--)
         {
@@ -28,7 +30,7 @@ public class SendDispatcher<TRequest, TResponse> : SendDispatcherBase<TResponse>
                 continue;
 
             var capturedNext = next;
-            next = ct => behavior.Handle((TRequest)request, capturedNext, ct);
+            next = ct => behavior.Handle(typedRequest, capturedNext, ct);
         }
 
         return next(cancellationToken);
@@ -52,10 +54,12 @@ public class SendDispatcher<TRequest> : SendDispatcherBase
                 $"No handler registered implementing IRequestHandler<{typeof(TRequest).Name}>.");
         }
 
+        var typedRequest = (TRequest)request;
+
         RequestHandlerDelegate<Unit> next = async ct =>
         {
             // NOTE: The await here is nescessary to execute the Void handler and return Unit after complete.
-            await handler.Handle((TRequest)request, ct);
+            await handler.Handle(typedRequest, ct);
             return Unit.Instance;
         };
 
@@ -66,7 +70,7 @@ public class SendDispatcher<TRequest> : SendDispatcherBase
                 continue;
 
             var capturedNext = next;
-            next = ct => behavior.Handle((TRequest)request, capturedNext, ct);
+            next = ct => behavior.Handle(typedRequest, capturedNext, ct);
         }
 
         return next(cancellationToken);
