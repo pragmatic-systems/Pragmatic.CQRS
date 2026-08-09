@@ -31,6 +31,10 @@ public class MediatorBenchmark
             cfg.RegisterServicesFromAssembly(typeof(MediatorBenchmark).Assembly);
         });
 
+        // MediatR does NOT auto-register pipeline behaviors — must register explicitly
+        mediatrServices.AddTransient<MediatR.IPipelineBehavior<VoidPipelineMessage, MediatR.Unit>, VoidPipelineBehaviourHandler>();
+        mediatrServices.AddTransient<MediatR.IPipelineBehavior<EchoPipelineMessage, int>, EchoPipelineBehaviourHandler>();
+
         _mediatrProvider = mediatrServices.BuildServiceProvider();
     }
 
