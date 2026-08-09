@@ -54,6 +54,7 @@ public class SendDispatcher<TRequest> : SendDispatcherBase
 
         RequestHandlerDelegate<Unit> next = async ct =>
         {
+            // NOTE: The await here is nescessary to execute the Void handler and return Unit after complete.
             await handler.Handle((TRequest)request, ct);
             return Unit.Instance;
         };
