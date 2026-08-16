@@ -194,8 +194,8 @@ dotnet cake --Target=BuildAndTest
 # Build and benchmark
 dotnet cake --Target=BuildAndBenchmark
 
-# Pack and push to a NuGet feed
-dotnet cake --Target=NugetPackAndPush --NugetSource="c:\package-source" --NugetApiKey="key"
+# Pack and push to a local NuGet folder
+dotnet cake --Target=LocalNugetPackAndPush --NuGetSource="c:\package-source" --NuGetApiKey="key"
 ```
 
 ## License
