@@ -1,5 +1,4 @@
-﻿using System.Reflection.Metadata;
-using MediatR;
+﻿using MediatR;
 
 namespace Pragmatic.CQRS.Benchmark.Handlers;
 
@@ -30,13 +29,13 @@ public class VoidPipelineBehaviourHandler
     : Pragmatic.CQRS.IPipelineBehavior<VoidPipelineMessage, Unit>,
       MediatR.IPipelineBehavior<VoidPipelineMessage, MediatR.Unit>
 {
-    async Task<Unit> Pragmatic.CQRS.IPipelineBehavior<VoidPipelineMessage, Unit>.Handle(VoidPipelineMessage input, Pragmatic.CQRS.RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken = default)
+    async Task<Unit> Pragmatic.CQRS.IPipelineBehavior<VoidPipelineMessage, Unit>.Handle(VoidPipelineMessage input, Pragmatic.CQRS.RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken)
     {
-        return await next();
+        return await next(cancellationToken);
     }
 
     async Task<MediatR.Unit> MediatR.IPipelineBehavior<VoidPipelineMessage, MediatR.Unit>.Handle(VoidPipelineMessage request, MediatR.RequestHandlerDelegate<MediatR.Unit> next, CancellationToken cancellationToken)
     {
-        return await next();
+        return await next(cancellationToken);
     }
 }

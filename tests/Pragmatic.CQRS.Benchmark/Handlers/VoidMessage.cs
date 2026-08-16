@@ -1,6 +1,4 @@
-﻿using System.Reflection.Metadata;
-
-namespace Pragmatic.CQRS.Benchmark.Handlers;
+﻿namespace Pragmatic.CQRS.Benchmark.Handlers;
 
 public class VoidMessage : Pragmatic.CQRS.IRequest, MediatR.IRequest
 {

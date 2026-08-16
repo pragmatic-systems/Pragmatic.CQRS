@@ -1,6 +1,4 @@
-﻿using System.Reflection.Metadata;
-
-namespace Pragmatic.CQRS.Benchmark.Handlers;
+﻿namespace Pragmatic.CQRS.Benchmark.Handlers;
 
 public class EchoMessage : Pragmatic.CQRS.IRequest<int>, MediatR.IRequest<int>
 {
@@ -52,13 +50,13 @@ public class EchoPipelineBehaviourHandler
     : Pragmatic.CQRS.IPipelineBehavior<EchoPipelineMessage, int>,
       MediatR.IPipelineBehavior<EchoPipelineMessage, int>
 {
-    async Task<int> Pragmatic.CQRS.IPipelineBehavior<EchoPipelineMessage, int>.Handle(EchoPipelineMessage input, Pragmatic.CQRS.RequestHandlerDelegate<int> next, CancellationToken cancellationToken = default)
+    async Task<int> Pragmatic.CQRS.IPipelineBehavior<EchoPipelineMessage, int>.Handle(EchoPipelineMessage input, Pragmatic.CQRS.RequestHandlerDelegate<int> next, CancellationToken cancellationToken)
     {
-        return await next();
+        return await next(cancellationToken);
     }
 
     async Task<int> MediatR.IPipelineBehavior<EchoPipelineMessage, int>.Handle(EchoPipelineMessage request, MediatR.RequestHandlerDelegate<int> next, CancellationToken cancellationToken)
     {
-        return await next();
+        return await next(cancellationToken);
     }
 }

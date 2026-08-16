@@ -45,7 +45,7 @@ jobs:
           SonarOrg: ${{ vars.SONARORG }}
           SonarToken: ${{ secrets.SONARTOKEN }}
           SonarHostUrl: ${{ vars.SONARHOST }}
-          # NOTE: Free sonar so we're using "main" and a seperate build scan project for Main vs PR.
+          # NOTE: Free sonar so we're using "main" and a separate build scan project for Main vs PR.
           SonarProjectKey: ${{ github.event.pull_request && format('{0}-PR', secrets.SONAR_PROJ_KEY) || secrets.SONAR_PROJ_KEY }}
           SonarProjectName: ${{ github.event.pull_request && format('{0}-PR', vars.SONAR_PROJ_NAME) || vars.SONAR_PROJ_NAME }}
           SonarBranch: main 

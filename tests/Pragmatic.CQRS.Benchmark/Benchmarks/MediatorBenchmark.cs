@@ -14,6 +14,7 @@ public class MediatorBenchmark
     {
         // Pragmatic.CQRS DI setup
         var pragmaServices = new ServiceCollection();
+        pragmaServices.AddLogging();
         pragmaServices.AddCqrs(cfg =>
         {
             cfg.RegisterServicesFromAssemblies(typeof(MediatorBenchmark).Assembly);
@@ -26,10 +27,14 @@ public class MediatorBenchmark
 
         // MediatR DI setup
         var mediatrServices = new ServiceCollection();
+        mediatrServices.AddLogging(); // required by MediatR >= 14
         mediatrServices.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(typeof(MediatorBenchmark).Assembly);
         });
+
+        mediatrServices.AddTransient<MediatR.IPipelineBehavior<VoidPipelineMessage, MediatR.Unit>, VoidPipelineBehaviourHandler>();
+        mediatrServices.AddTransient<MediatR.IPipelineBehavior<EchoPipelineMessage, int>, EchoPipelineBehaviourHandler>();
 
         _mediatrProvider = mediatrServices.BuildServiceProvider();
     }

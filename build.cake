@@ -123,6 +123,18 @@ Task("NugetPackAndPush")
 		CiNugetPush(nugetArgs, packagesFolder);
 	});
 
+Task("LocalNugetPackAndPush")
+	.IsDependentOn("__LintCheck")
+	.IsDependentOn("__ValidateNugetArgs")
+	.IsDependentOn("__Version")
+	.Does(() =>
+	{
+		CiTest();
+		CiBenchmark();
+		CiNugetPack(buildManifest, packagesFolder, versionNumber);
+		CiNugetPush(nugetArgs, packagesFolder);
+	});
+
 Task("DockerPackAndPush")
 	.IsDependentOn("__LintCheck")
 	.IsDependentOn("__ValidateDockerArgs")

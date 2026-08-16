@@ -16,7 +16,7 @@ dotnet_sort_system_directives_first = true
 # StyleCop analyzer severity overrides
 # Set the default severity for common rules; adjust as needed.
 dotnet_diagnostic.SA1000.severity = warning  # Comma‑separated identifiers
-dotnet_diagnostic.SA1600.severity = none# Documentation required
+dotnet_diagnostic.SA1600.severity = none # Documentation required
 csharp_using_directive_placement = outside_namespace:silent
 csharp_prefer_simple_using_statement = true:suggestion
 csharp_prefer_braces = true:silent
@@ -163,3 +163,4 @@ dotnet_style_qualification_for_event = false:silent
 
 # Default severity for analyzer diagnostics with category 'StyleCop.CSharp.DocumentationRules'
 dotnet_analyzer_diagnostic.category-StyleCop.CSharp.DocumentationRules.severity = silent
+dotnet_diagnostic.SA1009.severity = none
