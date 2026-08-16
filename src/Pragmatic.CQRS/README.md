@@ -2,6 +2,11 @@
 
 A lightweight CQRS mediator implementation for .NET that mirrors the MediatR interfaces. Built for simplicity, performance, and clean separation of concerns.
 
+## Why?
+Since MediatR switched to licencesed, I just wanted to own a small slice of the functionality to support CQRS on my personal projects, and also to put a local LLM setup through its paces (Pi / Qwen) on generic/recursive/reflection problems.
+
+This is the end result.
+
 ## Features
 
 - **Request/Response Handlers** — Send a command or query and receive a typed result.
