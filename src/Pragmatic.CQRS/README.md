@@ -117,7 +117,7 @@ A handler that throws does not fail the publish or its siblings — the exceptio
 
 ### Pipeline Behaviors
 
-Behaviors are not auto-registered — register them per request type, after `AddCqrs`. They wrap handlers in reverse registration order (LIFO).:
+Behaviors are not auto-registered — register them per request type, after `AddCqrs`. They wrap handlers in reverse registration order (LIFO):
 
 ```csharp
 public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>

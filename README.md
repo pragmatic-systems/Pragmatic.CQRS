@@ -42,11 +42,7 @@ services.AddCqrs(cfg =>
 });
 ```
 
-This registers `IMediator` and auto-discovers all handler implementations in the given assemblies. Handlers are registered as transient by default; pass a lifetime explicitly if you need something else:
-
-```csharp
-cfg.RegisterServicesFromAssemblies(new[] { typeof(Program).Assembly }, ServiceLifetime.Scoped);
-```
+This registers `IMediator` as transient and auto-discovers all handler implementations in the specified assemblies.
 
 ### 2. Define a Request and Handler
 
@@ -127,24 +123,24 @@ A handler that throws does not fail the publish or its siblings — the exceptio
 
 ### Pipeline Behaviors
 
-Behaviors are not auto-registered — register them per request type, after `AddCqrs`:
+Behaviors are not auto-registered — register them per request type, after `AddCqrs`. They wrap handlers in reverse registration order (LIFO):
 
 ```csharp
-public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+public class LoggingBehavior<TResponse, TResponse> : IPipelineBehavior<TResponse, TResponse>
 {
-    private readonly ILogger<LoggingBehavior<TRequest, TResponse>> _logger;
+    private readonly ILogger<LoggingBehavior<TResponse, TResponse>> _logger;
 
-    public LoggingBehavior(ILogger<LoggingBehavior<TRequest, TResponse>> logger)
+    public LoggingBehavior(ILogger<LoggingBehavior<TResponse, TResponse>> logger)
         => _logger = logger;
 
     public async Task<TResponse> Handle(
-        TRequest request,
+        TResponse request,
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Handling {RequestType}", typeof(TRequest).Name);
+        _logger.LogInformation("Handling {RequestType}", typeof(TResponse).Name);
         var response = await next(cancellationToken);
-        _logger.LogInformation("Handled {RequestType}", typeof(TRequest).Name);
+        _logger.LogInformation("Handled {RequestType}", typeof(TResponse).Name);
         return response;
     }
 }
@@ -169,14 +165,14 @@ services.AddScoped<IPipelineBehavior<DeleteUserRequest, Unit>, LoggingBehavior<D
 
 | Type | Purpose |
 |------|---------|
-| `IMediator` | The central mediator — `Send<TResponse>`, `Send<TRequest>`, `Publish` |
+| `IMediator` | The central mediator — `Send<TResponse>`, `Send<TResponse>`, `Publish` |
 | `IRequest` | Marker for void requests (no return value) |
 | `IRequest<TResult>` | Marker for requests expecting a typed response |
-| `IRequestHandler<TRequest>` | Handles void requests — `Task Handle(TRequest, CancellationToken)` |
-| `IRequestHandler<TRequest, TResult>` | Handles typed requests — `Task<TResult> Handle(TRequest, CancellationToken)` |
+| `IRequestHandler<TResponse>` | Handles void requests — `Task Handle(TResponse, CancellationToken)` |
+| `IRequestHandler<TResponse, TResult>` | Handles typed requests — `Task<TResult> Handle(TResponse, CancellationToken)` |
 | `INotification` | Marker for publish/subscribe events |
 | `INotificationHandler<TNotification>` | Handles a notification — multiple handlers supported |
-| `IPipelineBehavior<TRequest, TResponse>` | Middleware for typed requests (use `IPipelineBehavior<TRequest, Unit>` for void requests) |
+| `IPipelineBehavior<TResponse, TResponse>` | Middleware for typed requests (use `IPipelineBehavior<TResponse, Unit>` for void requests) |
 | `RequestHandlerDelegate` / `RequestHandlerDelegate<TResponse>` | The `next` delegate passed to pipeline behaviors |
 | `Unit` | Void result marker used in void pipeline behavior signatures |
 | `CqrsException` | Mediator errors (e.g. no handler registered for a request) |
