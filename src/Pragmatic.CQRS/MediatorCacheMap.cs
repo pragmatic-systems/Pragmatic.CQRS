@@ -1,17 +1,12 @@
 ﻿using System.Collections.Concurrent;
-using System.Linq.Expressions;
-using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Pragmatic.CQRS;
 
 public class MediatorCacheMap
 {
-    public sealed record MediatorMap(Type Type, Delegate Method);
-
-    public sealed record MediatorCacheEntry(MediatorMap Handler, MediatorMap Behaviour);
-
-    private readonly ConcurrentDictionary<Type, MediatorMap> _notificationCache = new();
+    private readonly ConcurrentDictionary<Type, object> _notificationDispatcherCache = new();
     private readonly ConcurrentDictionary<(Type RequestType, Type ResponseType), object> _dispatcherCache = new();
 
     public SendDispatcherBase<TResponse> GetOrAddDispatcher<TResponse>(Type requestType, Type responseType)
@@ -34,48 +29,13 @@ public class MediatorCacheMap
         });
     }
 
-    public MediatorMap GetOrAddNotification(Type notificationType)
+    public NotificationDispatcherBase GetOrAddNotificationDispatcher(Type notificationType, ILogger<Mediator>? logger = null)
     {
-        return _notificationCache.GetOrAdd(notificationType, _ =>
+        return (NotificationDispatcherBase)_notificationDispatcherCache.GetOrAdd(notificationType, _ =>
         {
-            return GetNotificationHandlerMap(notificationType);
+            var dispatcherType = typeof(NotificationDispatcher<>).MakeGenericType(notificationType);
+            return Activator.CreateInstance(dispatcherType, new object?[] { logger })
+                ?? throw new CqrsException($"Failed to create notification dispatcher for {notificationType.Name}", notificationType);
         });
     }
-
-    private static MediatorMap GetNotificationHandlerMap(Type notificationType)
-    {
-        var handlerType = typeof(INotificationHandler<>).MakeGenericType(notificationType);
-        var handlerParamObj = Expression.Parameter(typeof(object), "handlerObj");
-        var requestParamObj = Expression.Parameter(typeof(object), "notificationObj");
-        var ctParamObj = Expression.Parameter(typeof(object), "ctObj");
-
-        var handleMethod = handlerType.GetMethod("Handle", new[] { notificationType, typeof(CancellationToken) })
-            ?? throw new CqrsException($"Cannot resolve Handle method for Handler: {handlerType.FullName}", handlerType);
-
-        var handlerExpr = Expression.Convert(handlerParamObj, handlerType);
-        var requestExpr = Expression.Convert(requestParamObj, notificationType);
-        var ctExpr = Expression.Convert(ctParamObj, typeof(CancellationToken));
-
-        var callExpr = Expression.Call(handlerExpr, handleMethod, requestExpr, ctExpr);
-
-        var lambdaExpr = Expression.Lambda<Func<object, object, object, object>>(
-            callExpr,
-            handlerParamObj,
-            requestParamObj,
-            ctParamObj);
-
-        var handlerDelegate = lambdaExpr.Compile();
-
-        return new MediatorMap(handlerType, handlerDelegate);
-    }
-}
-
-public abstract class SendDispatcherBase<TResponse>
-{
-    public abstract Task<TResponse> Invoke(IServiceProvider provider, IRequest<TResponse> request, CancellationToken cancellationToken);
-}
-
-public abstract class SendDispatcherBase
-{
-    public abstract Task Invoke(IServiceProvider provider, IRequest request, CancellationToken cancellationToken);
 }
