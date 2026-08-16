@@ -1,5 +1,4 @@
-﻿using System.Reflection.Metadata;
-using MediatR;
+﻿using MediatR;
 
 namespace Pragmatic.CQRS.Benchmark.Handlers;
 
