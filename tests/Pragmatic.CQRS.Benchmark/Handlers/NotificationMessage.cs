@@ -15,12 +15,12 @@ public class EchoNotificationFirstHandler
 {
     Task Pragmatic.CQRS.INotificationHandler<EchoNotification>.Handle(EchoNotification notification, CancellationToken cancellationToken)
     {
-        return Task.Delay(1);
+        return Task.Delay(1, cancellationToken);
     }
 
     Task MediatR.INotificationHandler<EchoNotification>.Handle(EchoNotification notification, CancellationToken cancellationToken)
     {
-        return Task.Delay(1);
+        return Task.Delay(1, cancellationToken);
     }
 }
 
@@ -30,11 +30,11 @@ public class EchoNotificationSecondHandler
 {
     Task Pragmatic.CQRS.INotificationHandler<EchoNotification>.Handle(EchoNotification notification, CancellationToken cancellationToken)
     {
-        return Task.Delay(1);
+        return Task.Delay(1, cancellationToken);
     }
 
     Task MediatR.INotificationHandler<EchoNotification>.Handle(EchoNotification notification, CancellationToken cancellationToken)
     {
-        return Task.Delay(1);
+        return Task.Delay(1, cancellationToken);
     }
 }

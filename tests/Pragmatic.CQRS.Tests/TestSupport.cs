@@ -116,7 +116,7 @@ public class AsyncErrorHandler : INotificationHandler<DomainEventOccurred>
 {
     public async Task Handle(DomainEventOccurred notification, CancellationToken cancellationToken)
     {
-        await Task.Delay(100);
+        await Task.Delay(100, cancellationToken);
         throw new ApplicationException();
     }
 }

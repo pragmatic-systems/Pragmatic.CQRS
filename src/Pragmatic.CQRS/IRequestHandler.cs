@@ -1,6 +1,8 @@
 ﻿namespace Pragmatic.CQRS;
 
-public interface IBaseRequestHandler { }
+public interface IBaseRequestHandler
+{
+}
 
 public interface IRequestHandler<in TRequest> : IBaseRequestHandler
     where TRequest : IRequest

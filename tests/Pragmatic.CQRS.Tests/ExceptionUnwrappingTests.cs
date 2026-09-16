@@ -93,10 +93,14 @@ public class ExceptionUnwrappingTests
     private sealed class TestBusinessException : Exception
     {
         public TestBusinessException(string message)
-            : base(message) { }
+            : base(message)
+        {
+        }
 
         public TestBusinessException(string message, Exception inner)
-            : base(message, inner) { }
+            : base(message, inner)
+        {
+        }
     }
 
     [Fact]
