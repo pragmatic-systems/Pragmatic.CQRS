@@ -9,7 +9,6 @@ public class EchoNotification : Pragmatic.CQRS.INotification, MediatR.INotificat
 }
 
 // NOTE: Due to the significant performance / memory allocation difference between Pragmatic implementation and MediatR, I added a 1ms delay and confirmed the numbers are inflating correctly on both sides.
-
 public class EchoNotificationFirstHandler
     : Pragmatic.CQRS.INotificationHandler<EchoNotification>,
       MediatR.INotificationHandler<EchoNotification>
