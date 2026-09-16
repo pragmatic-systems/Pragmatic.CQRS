@@ -31,7 +31,7 @@ var sonarArgs = new SonarArgs
     Token = CiArgument("SonarToken"),
     ProjectKey = CiArgument("SonarProjectKey"),
     ProjectName = CiArgument("SonarProjectName"),
-	Branch = CiArgument("SonarBranch"),
+    Branch = CiArgument("SonarBranch"),
     HostUrl = CiArgument("SonarHostUrl", "http://localhost:9000")
 };
 
@@ -39,6 +39,7 @@ var sonarArgs = new SonarArgs
 var artifactsFolder = "./artifacts";
 var packagesFolder = System.IO.Path.Combine(artifactsFolder, "packages");
 
+///////////////////////////////////////////////////////////////////////////////
 // Setup / Teardown
 ///////////////////////////////////////////////////////////////////////////////
 Setup(context =>
