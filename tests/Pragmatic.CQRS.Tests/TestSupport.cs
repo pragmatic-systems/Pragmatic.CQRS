@@ -9,7 +9,7 @@ public class LoggingQueryHandler : IRequestHandler<LoggingQuery, int>
 {
     public int InvocationCount { get; private set; }
 
-    public Task<int> Handle(LoggingQuery query, CancellationToken cancellationToken = default)
+    public Task<int> Handle(LoggingQuery query, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -30,10 +30,10 @@ public class LoggingBehavior : IPipelineBehavior<LoggingQuery, int>
         Log = logs ?? new List<string>();
     }
 
-    public async Task<int> Handle(LoggingQuery input, RequestHandlerDelegate<int> next, CancellationToken cancellationToken = default)
+    public async Task<int> Handle(LoggingQuery input, RequestHandlerDelegate<int> next, CancellationToken cancellationToken)
     {
         Log.Add($"{Name}-before");
-        var result = await next();
+        var result = await next(cancellationToken);
         Log.Add($"{Name}-after");
         return result;
     }
@@ -45,7 +45,7 @@ public class VoidLoggingCommandHandler : IRequestHandler<VoidLoggingCommand>
 {
     public int InvocationCount { get; private set; }
 
-    public Task Handle(VoidLoggingCommand query, CancellationToken cancellationToken = default)
+    public Task Handle(VoidLoggingCommand query, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -66,10 +66,10 @@ public class VoidLoggingBehavior : IPipelineBehavior<VoidLoggingCommand, Unit>
 
     public List<string> Log { get; }
 
-    public async Task<Unit> Handle(VoidLoggingCommand input, RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken = default)
+    public async Task<Unit> Handle(VoidLoggingCommand input, RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken)
     {
         Log.Add($"{Name}-before");
-        var result = await next();
+        var result = await next(cancellationToken);
         Log.Add($"{Name}-after");
         return result;
     }
@@ -89,7 +89,7 @@ public class DomainEventFirstHandler : INotificationHandler<DomainEventOccurred>
 
     public string? ReceivedEventName { get; private set; }
 
-    public Task Handle(DomainEventOccurred notification, CancellationToken cancellationToken = default)
+    public Task Handle(DomainEventOccurred notification, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         InvocationCount++;
@@ -104,7 +104,7 @@ public class DomainEventSecondHandler : INotificationHandler<DomainEventOccurred
 
     public string? ReceivedEventName { get; private set; }
 
-    public Task Handle(DomainEventOccurred notification, CancellationToken cancellationToken = default)
+    public Task Handle(DomainEventOccurred notification, CancellationToken cancellationToken)
     {
         InvocationCount++;
         ReceivedEventName = notification.EventName;
@@ -114,7 +114,7 @@ public class DomainEventSecondHandler : INotificationHandler<DomainEventOccurred
 
 public class AsyncErrorHandler : INotificationHandler<DomainEventOccurred>
 {
-    public async Task Handle(DomainEventOccurred notification, CancellationToken cancellationToken = default)
+    public async Task Handle(DomainEventOccurred notification, CancellationToken cancellationToken)
     {
         await Task.Delay(100);
         throw new ApplicationException();
@@ -123,7 +123,7 @@ public class AsyncErrorHandler : INotificationHandler<DomainEventOccurred>
 
 public class SyncErrorHandler : INotificationHandler<DomainEventOccurred>
 {
-    public Task Handle(DomainEventOccurred notification, CancellationToken cancellationToken = default)
+    public Task Handle(DomainEventOccurred notification, CancellationToken cancellationToken)
     {
         throw new ApplicationException();
     }
@@ -133,7 +133,7 @@ public record CancellationNotification : INotification { }
 
 public class CancellationNotificationHandler : INotificationHandler<CancellationNotification>
 {
-    public Task Handle(CancellationNotification notification, CancellationToken cancellationToken = default)
+    public Task Handle(CancellationNotification notification, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         return Task.CompletedTask;
@@ -155,10 +155,10 @@ public class GenericPipelineBehavior<TRequest, TResponse> : IPipelineBehavior<TR
         _log = log;
     }
 
-    public async Task<TResponse> Handle(TRequest input, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken = default)
+    public async Task<TResponse> Handle(TRequest input, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         _log.Add($"GenericBehavior<{typeof(TRequest).Name},{typeof(TResponse).Name}>-before");
-        var result = await next();
+        var result = await next(cancellationToken);
         _log.Add($"GenericBehavior<{typeof(TRequest).Name},{typeof(TResponse).Name}>-after");
         return result;
     }
@@ -171,7 +171,7 @@ public class OpenGenericQueryAHandler : IRequestHandler<OpenGenericQueryA, int>
 {
     public int InvocationCount { get; private set; }
 
-    public Task<int> Handle(OpenGenericQueryA query, CancellationToken cancellationToken = default)
+    public Task<int> Handle(OpenGenericQueryA query, CancellationToken cancellationToken)
     {
         InvocationCount++;
         return Task.FromResult(query.Value * 3);
@@ -185,7 +185,7 @@ public class OpenGenericQueryBHandler : IRequestHandler<OpenGenericQueryB, strin
 {
     public int InvocationCount { get; private set; }
 
-    public Task<string> Handle(OpenGenericQueryB query, CancellationToken cancellationToken = default)
+    public Task<string> Handle(OpenGenericQueryB query, CancellationToken cancellationToken)
     {
         InvocationCount++;
         return Task.FromResult($"echo:{query.Text}");

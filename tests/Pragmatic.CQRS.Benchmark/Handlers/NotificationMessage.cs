@@ -13,7 +13,7 @@ public class EchoNotificationFirstHandler
     : Pragmatic.CQRS.INotificationHandler<EchoNotification>,
       MediatR.INotificationHandler<EchoNotification>
 {
-    Task Pragmatic.CQRS.INotificationHandler<EchoNotification>.Handle(EchoNotification notification, CancellationToken cancellationToken = default)
+    Task Pragmatic.CQRS.INotificationHandler<EchoNotification>.Handle(EchoNotification notification, CancellationToken cancellationToken)
     {
         return Task.Delay(1);
     }
@@ -28,7 +28,7 @@ public class EchoNotificationSecondHandler
     : Pragmatic.CQRS.INotificationHandler<EchoNotification>,
       MediatR.INotificationHandler<EchoNotification>
 {
-    Task Pragmatic.CQRS.INotificationHandler<EchoNotification>.Handle(EchoNotification notification, CancellationToken cancellationToken = default)
+    Task Pragmatic.CQRS.INotificationHandler<EchoNotification>.Handle(EchoNotification notification, CancellationToken cancellationToken)
     {
         return Task.Delay(1);
     }

@@ -12,7 +12,7 @@ public class EchoMessageHandler
     : Pragmatic.CQRS.IRequestHandler<EchoMessage, int>,
       MediatR.IRequestHandler<EchoMessage, int>
 {
-    Task<int> Pragmatic.CQRS.IRequestHandler<EchoMessage, int>.Handle(EchoMessage request, CancellationToken cancellationToken = default)
+    Task<int> Pragmatic.CQRS.IRequestHandler<EchoMessage, int>.Handle(EchoMessage request, CancellationToken cancellationToken)
     {
         return Task.FromResult(request.Count);
     }
@@ -35,7 +35,7 @@ public class EchoPipelineMessageHandler
     : Pragmatic.CQRS.IRequestHandler<EchoPipelineMessage, int>,
       MediatR.IRequestHandler<EchoPipelineMessage, int>
 {
-    Task<int> Pragmatic.CQRS.IRequestHandler<EchoPipelineMessage, int>.Handle(EchoPipelineMessage request, CancellationToken cancellationToken = default)
+    Task<int> Pragmatic.CQRS.IRequestHandler<EchoPipelineMessage, int>.Handle(EchoPipelineMessage request, CancellationToken cancellationToken)
     {
         return Task.FromResult(request.Count);
     }
