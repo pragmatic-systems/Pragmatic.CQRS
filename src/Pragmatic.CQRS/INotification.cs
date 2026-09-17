@@ -1,3 +1,5 @@
 ﻿namespace Pragmatic.CQRS;
 
-public interface INotification { }
+public interface INotification
+{
+}

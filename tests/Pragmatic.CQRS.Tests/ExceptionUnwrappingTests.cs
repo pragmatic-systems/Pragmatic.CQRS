@@ -10,7 +10,7 @@ public class ExceptionUnwrappingTests
 
     private sealed class ThrowingQueryHandler : IRequestHandler<ThrowingQuery, int>
     {
-        public Task<int> Handle(ThrowingQuery request, CancellationToken cancellationToken = default)
+        public Task<int> Handle(ThrowingQuery request, CancellationToken cancellationToken)
             => throw new TestBusinessException("boom");
     }
 
@@ -18,7 +18,7 @@ public class ExceptionUnwrappingTests
 
     private sealed class VoidThrowingCommandHandler : IRequestHandler<VoidThrowingCommand>
     {
-        public Task Handle(VoidThrowingCommand request, CancellationToken cancellationToken = default)
+        public Task Handle(VoidThrowingCommand request, CancellationToken cancellationToken)
             => throw new TestBusinessException("void boom");
     }
 
@@ -26,7 +26,7 @@ public class ExceptionUnwrappingTests
 
     private sealed class InnerChainQueryHandler : IRequestHandler<InnerChainQuery, string>
     {
-        public Task<string> Handle(InnerChainQuery request, CancellationToken cancellationToken = default)
+        public Task<string> Handle(InnerChainQuery request, CancellationToken cancellationToken)
         {
             try
             {
@@ -45,7 +45,7 @@ public class ExceptionUnwrappingTests
     {
         public int InvocationCount { get; private set; }
 
-        public Task<int> Handle(BehaviorTestQuery request, CancellationToken cancellationToken = default)
+        public Task<int> Handle(BehaviorTestQuery request, CancellationToken cancellationToken)
         {
             InvocationCount++;
             return Task.FromResult(42);
@@ -56,7 +56,7 @@ public class ExceptionUnwrappingTests
     {
         public List<string> Log { get; } = new();
 
-        public Task<int> Handle(BehaviorTestQuery input, RequestHandlerDelegate<int> next, CancellationToken cancellationToken = default)
+        public Task<int> Handle(BehaviorTestQuery input, RequestHandlerDelegate<int> next, CancellationToken cancellationToken)
         {
             Log.Add("before");
             throw new TestBusinessException("behavior boom");
@@ -67,12 +67,12 @@ public class ExceptionUnwrappingTests
     {
         public List<string> Log { get; } = new();
 
-        public async Task<int> Handle(BehaviorTestQuery input, RequestHandlerDelegate<int> next, CancellationToken cancellationToken = default)
+        public async Task<int> Handle(BehaviorTestQuery input, RequestHandlerDelegate<int> next, CancellationToken cancellationToken)
         {
             Log.Add("outer-before");
             try
             {
-                var result = await next();
+                var result = await next(cancellationToken);
                 Log.Add("outer-after");
                 return result;
             }
@@ -86,17 +86,21 @@ public class ExceptionUnwrappingTests
 
     private sealed class ThrowingBehaviorHandler : IRequestHandler<BehaviorTestQuery, int>
     {
-        public Task<int> Handle(BehaviorTestQuery request, CancellationToken cancellationToken = default)
+        public Task<int> Handle(BehaviorTestQuery request, CancellationToken cancellationToken)
             => throw new TestBusinessException("handler boom");
     }
 
     private sealed class TestBusinessException : Exception
     {
         public TestBusinessException(string message)
-            : base(message) { }
+            : base(message)
+        {
+        }
 
         public TestBusinessException(string message, Exception inner)
-            : base(message, inner) { }
+            : base(message, inner)
+        {
+        }
     }
 
     [Fact]
