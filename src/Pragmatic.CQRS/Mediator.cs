@@ -5,7 +5,7 @@ namespace Pragmatic.CQRS;
 public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILogger<Mediator>? logger = null)
     : IMediator
 {
-    public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
+    public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -16,7 +16,7 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
         return dispatcher.Invoke(provider, request, cancellationToken);
     }
 
-    public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
+    public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken)
         where TRequest : IRequest
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -27,7 +27,7 @@ public class Mediator(IServiceProvider provider, MediatorCacheMap cacheMap, ILog
         return dispatcher.Invoke(provider, request, cancellationToken);
     }
 
-    public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
+    public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken)
         where TNotification : INotification
     {
         ArgumentNullException.ThrowIfNull(notification);

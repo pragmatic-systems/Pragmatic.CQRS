@@ -44,28 +44,35 @@ public class MediatorBenchmark
     public async Task Pragma_RequestResponseRaw()
     {
         var mediator = _pragmaProvider.GetRequiredService<Pragmatic.CQRS.IMediator>();
-        await mediator.Send(new EchoMessage(1));
+        await mediator.Send(new EchoMessage(1), CancellationToken.None);
     }
 
     [Benchmark]
     public async Task Pragma_RequestResponsePipeline()
     {
         var mediator = _pragmaProvider.GetRequiredService<Pragmatic.CQRS.IMediator>();
-        await mediator.Send(new EchoPipelineMessage(1));
+        await mediator.Send(new EchoPipelineMessage(1), CancellationToken.None);
     }
 
     [Benchmark]
     public async Task Pragma_RequestVoidRaw()
     {
         var mediator = _pragmaProvider.GetRequiredService<Pragmatic.CQRS.IMediator>();
-        await mediator.Send(new VoidMessage(1));
+        await mediator.Send(new VoidMessage(1), CancellationToken.None);
     }
 
     [Benchmark]
     public async Task Pragma_RequestVoidPipeline()
     {
         var mediator = _pragmaProvider.GetRequiredService<Pragmatic.CQRS.IMediator>();
-        await mediator.Send(new VoidPipelineMessage(1));
+        await mediator.Send(new VoidPipelineMessage(1), CancellationToken.None);
+    }
+
+    [Benchmark]
+    public async Task Pragma_Publish()
+    {
+        var mediator = _pragmaProvider.GetRequiredService<Pragmatic.CQRS.IMediator>();
+        await mediator.Publish(new EchoNotification(1), CancellationToken.None);
     }
 
     // --- MediatR benchmarks ---
@@ -95,5 +102,12 @@ public class MediatorBenchmark
     {
         var mediator = _mediatrProvider.GetRequiredService<ISender>();
         await mediator.Send(new VoidPipelineMessage(1));
+    }
+
+    [Benchmark]
+    public async Task MediatR_Publish()
+    {
+        var mediator = _mediatrProvider.GetRequiredService<IPublisher>();
+        await mediator.Publish(new EchoNotification(1));
     }
 }

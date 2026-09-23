@@ -5,8 +5,4 @@
     <UseVSTest>false</UseVSTest>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
-  <ItemGroup>
-    <!-- StyleCop Analyzers for code style enforcement -->
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="All" />
-  </ItemGroup>
 </Project>

@@ -14,7 +14,7 @@ public class VoidPipelineMessageHandler
     : Pragmatic.CQRS.IRequestHandler<VoidPipelineMessage>,
       MediatR.IRequestHandler<VoidPipelineMessage>
 {
-    Task Pragmatic.CQRS.IRequestHandler<VoidPipelineMessage>.Handle(VoidPipelineMessage request, CancellationToken cancellationToken = default)
+    Task Pragmatic.CQRS.IRequestHandler<VoidPipelineMessage>.Handle(VoidPipelineMessage request, CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
     }
