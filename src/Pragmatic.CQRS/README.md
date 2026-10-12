@@ -177,7 +177,7 @@ services.AddScoped<IPipelineBehavior<DeleteUserRequest, Unit>, LoggingBehavior<D
 - Handler exceptions propagate to the caller unwrapped — the mediator does not wrap them.
 - Handlers and behaviors are resolved from the DI container on every dispatch, so transient lifetimes are safe.
 - Dispatchers are cached per (request type, response type) after first use; reflection is only involved once per type.
-- Target framework: `net8.0`.
+- Target frameworks: `net8.0` and `net10.0`.
 
 ## License
 

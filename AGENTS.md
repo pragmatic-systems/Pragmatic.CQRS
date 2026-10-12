@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Lightweight CQRS mediator library for .NET (net8.0) with MediatR-compatible interfaces.
+Lightweight CQRS mediator library for .NET (net8.0 + net10.0) with MediatR-compatible interfaces.
 
 ## Layout
 
@@ -21,4 +21,4 @@ dotnet cake --Target=BuildAndBenchmark  # build + benchmark
 - Keep the public API MediatR-compatible (`IRequest`, `IRequestHandler`, `INotification`, `INotificationHandler`, `IPipelineBehavior`); don't add dependencies beyond the two abstractions.
 - Style is enforced by `.editorconfig` — follow it (file-scoped namespaces, expression-bodied members, CRLF, UTF-8 BOM, usings outside namespace).
 - Husky git hooks run on restore (`dotnet tool restore`); don't work around them.
-- Target framework is `net8.0`; SDK 10 via `global.json`.
+- Target frameworks are `net8.0` + `net10.0` (library and tests); benchmarks are pinned to `net10.0`; SDK 10 via `global.json`.
