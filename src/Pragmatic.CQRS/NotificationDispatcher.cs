@@ -13,7 +13,7 @@ public class NotificationDispatcher<TNotification> : NotificationDispatcherBase
         _logger = logger;
     }
 
-    public override Task Invoke(IServiceProvider provider, INotification notification, CancellationToken cancellationToken)
+    public override async Task Invoke(IServiceProvider provider, INotification notification, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(notification);
 
@@ -25,12 +25,12 @@ public class NotificationDispatcher<TNotification> : NotificationDispatcherBase
         if (handlers.Length == 0)
         {
             _logger?.LogDebug("No handlers registered for notification type '{NotificationType}'. Notification will be silently dropped.", notificationType.FullName);
-            return Task.CompletedTask;
+            return;
         }
 
         var typedNotification = (TNotification)notification;
 
-        var tasks = handlers.Select(async handler =>
+        foreach (var handler in handlers)
         {
             if (handler == null) return;
 
@@ -46,8 +46,6 @@ public class NotificationDispatcher<TNotification> : NotificationDispatcherBase
             {
                 _logger?.LogError(ex, "Exception occurred while notifying handler '{Handler}' for notification '{Notification}'", typeof(INotificationHandler<TNotification>).FullName, notificationType.FullName);
             }
-        }).ToArray();
-
-        return Task.WhenAll(tasks);
+        }
     }
 }
