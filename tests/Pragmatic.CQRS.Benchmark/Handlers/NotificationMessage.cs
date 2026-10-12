@@ -8,19 +8,18 @@ public class EchoNotification : Pragmatic.CQRS.INotification, MediatR.INotificat
     public int Count { get; set; }
 }
 
-// NOTE: Due to the significant performance / memory allocation difference between Pragmatic implementation and MediatR, I added a 1ms delay and confirmed the numbers are inflating correctly on both sides.
 public class EchoNotificationFirstHandler
     : Pragmatic.CQRS.INotificationHandler<EchoNotification>,
       MediatR.INotificationHandler<EchoNotification>
 {
     Task Pragmatic.CQRS.INotificationHandler<EchoNotification>.Handle(EchoNotification notification, CancellationToken cancellationToken)
     {
-        return Task.Delay(1, cancellationToken);
+        return Task.CompletedTask;
     }
 
     Task MediatR.INotificationHandler<EchoNotification>.Handle(EchoNotification notification, CancellationToken cancellationToken)
     {
-        return Task.Delay(1, cancellationToken);
+        return Task.CompletedTask;
     }
 }
 
@@ -30,11 +29,11 @@ public class EchoNotificationSecondHandler
 {
     Task Pragmatic.CQRS.INotificationHandler<EchoNotification>.Handle(EchoNotification notification, CancellationToken cancellationToken)
     {
-        return Task.Delay(1, cancellationToken);
+        return Task.CompletedTask;
     }
 
     Task MediatR.INotificationHandler<EchoNotification>.Handle(EchoNotification notification, CancellationToken cancellationToken)
     {
-        return Task.Delay(1, cancellationToken);
+        return Task.CompletedTask;
     }
 }
